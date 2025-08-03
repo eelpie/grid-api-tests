@@ -1,8 +1,11 @@
 class MySuite extends munit.FunSuite {
   val gridApi = new GridApi(???, ???)
-  test("can discover image loader urls") {
-    val prepareEndpoint = gridApi.getImageLoaderPrepareEndpoint
-    println(prepareEndpoint)
-    assertEquals(prepareEndpoint.nonEmpty, true)
+  test("can load image") {
+    val image = getClass.getResourceAsStream("IMG_4525.JPG").readAllBytes()
+
+    val uploadStatus = gridApi.loadImage(image)
+    println(uploadStatus)
+    assertEquals(uploadStatus.nonEmpty, true)
   }
+
 }

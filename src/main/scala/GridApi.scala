@@ -1,6 +1,7 @@
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.{Materializer, SystemMaterializer}
 import play.api.libs.json.{JsValue, Json, Reads}
+import play.api.libs.ws.DefaultBodyWritables._
 import play.api.libs.ws.JsonBodyReadables.readableAsJson
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 
@@ -40,7 +41,21 @@ class GridApi(mediaApiUrl: String, apiKey: String) {
   }
 
   def getImageLoaderPrepareEndpoint: String = {
-      getImageLoadedEndpoints.links.find(_.rel == "prepare").get.href
+    getImageLoadedEndpoints.links.find(_.rel == "load").get.href
+  }
+
+  def loadImage(image: Array[Byte]): String = {
+    val prepareEndpoint = getImageLoaderPrepareEndpoint
+    val meh = prepareEndpoint.split("\\{").head
+
+    val eventualResponse = wsClient.url(meh).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      post(image)
+
+    val response = Await.result(eventualResponse, Duration(10, SECONDS))
+    println(response)
+    val uploadStatus = response.body
+    uploadStatus
   }
 
 }
@@ -49,3 +64,5 @@ class GridApi(mediaApiUrl: String, apiKey: String) {
 case class Link(rel: String, href: String)
 
 case class MediaApiResponse(links: Seq[Link])
+
+case class ImageLoadResponse(uri: String)
