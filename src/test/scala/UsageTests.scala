@@ -40,7 +40,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest {
     val usages = gridApi.getUsages(imageId).data.map(_.data)
 
     // TODO assert actual usage was persisted
-    usages.find(usage => usage.platform == "print" && usage.dateAdded == dataAdded)
+    usages.find(usage => usage.platform == "print" && usage.dateAdded == dataAdded && usage.status == "published")
   }
 
   private def uploadImage: String = {
