@@ -30,9 +30,8 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   }
 
   def getUsageEndpoints: MediaApiResponse = {
-    // TODO usage is not advertised in the media-api links
-    val usagesBaseUrl = mediaApiUrl.replaceAll("/media-api", "/usage")
-    loadServiceIndexPage(usagesBaseUrl)
+    val usageLink = getServiceEndpoints.links.find(_.rel == "usage").get
+    loadServiceIndexPage(usageLink.href)
   }
 
   def getUsages(imageId: String): UsagesResponse = {
