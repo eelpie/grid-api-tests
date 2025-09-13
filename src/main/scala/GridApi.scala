@@ -44,7 +44,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) {
     getImageLoadedEndpoints.links.find(_.rel == "load").get.href
   }
 
-  def loadImage(image: Array[Byte]): ImageUploadResponse = {
+  def loadImage(image: Array[Byte]): Either[String, ImageUploadResponse] = {
     val prepareEndpoint = getImageLoaderPrepareEndpoint
     val meh = prepareEndpoint.split("\\{").head
 
@@ -53,7 +53,11 @@ class GridApi(mediaApiUrl: String, apiKey: String) {
       post(image)
 
     val response = Await.result(eventualResponse, Duration(10, SECONDS))
-    Json.parse(response.body).as[ImageUploadResponse]
+    if (response.status == 202) {
+      Right(Json.parse(response.body).as[ImageUploadResponse])
+    } else {
+      Left(response.body)
+    }
   }
 
   def getUploadStatus(uri: String): UploadStatus = {
@@ -70,5 +74,3 @@ class GridApi(mediaApiUrl: String, apiKey: String) {
 case class Link(rel: String, href: String)
 
 case class MediaApiResponse(links: Seq[Link])
-
-case class ImageLoadResponse(uri: String)
