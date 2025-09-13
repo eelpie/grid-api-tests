@@ -44,7 +44,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) {
     getImageLoadedEndpoints.links.find(_.rel == "load").get.href
   }
 
-  def loadImage(image: Array[Byte]): String = {
+  def loadImage(image: Array[Byte]): ImageUploadResponse = {
     val prepareEndpoint = getImageLoaderPrepareEndpoint
     val meh = prepareEndpoint.split("\\{").head
 
@@ -53,11 +53,17 @@ class GridApi(mediaApiUrl: String, apiKey: String) {
       post(image)
 
     val response = Await.result(eventualResponse, Duration(10, SECONDS))
-    println(response)
-    val uploadStatus = response.body
-    uploadStatus
+    Json.parse(response.body).as[ImageUploadResponse]
   }
 
+  def getUploadStatus(uri: String): UploadStatus = {
+    val eventualResponse = wsClient.url(uri).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      get()
+
+    val response = Await.result(eventualResponse, Duration(10, SECONDS))
+    Json.parse(response.body).as[UploadStatusResponse].data
+  }
 }
 
 
