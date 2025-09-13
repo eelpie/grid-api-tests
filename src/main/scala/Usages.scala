@@ -1,5 +1,5 @@
-import play.api.libs.json.{Json, OFormat}
-
+import org.joda.time.DateTime
+import play.api.libs.json.{JodaReads, JodaWrites, Json, OFormat, Reads}
 
 case class PrintUsageMetadata(
                                issueDate: String,
@@ -16,12 +16,13 @@ object PrintUsageMetadata {
 
 }
 
-case class PrintUsage(mediaId: String, dateAdded: String, printUsageMetadata: PrintUsageMetadata, containerId: String, usageId: String,
+case class PrintUsage(mediaId: String, dateAdded: DateTime, printUsageMetadata: PrintUsageMetadata, containerId: String, usageId: String,
                       usageStatus: String)
 
 object PrintUsage {
+  import JodaWrites._
+  import JodaReads._
   implicit val puw: OFormat[PrintUsage] = Json.format[PrintUsage]
-
 }
 
 
@@ -32,16 +33,17 @@ object PrintUsageSubmission {
 }
 
 
-case class Usage(id: String, platform: String, status: String)
+case class Usage(id: String, platform: String, status: String, dateAdded: DateTime)
 object Usage {
-  implicit val ur = Json.reads[Usage]
+  import JodaReads._
+  implicit val ur: Reads[Usage] = Json.reads[Usage]
 }
 case class Meh(data: Usage)
 object Meh {
-  implicit val mr = Json.reads[Meh]
+  implicit val mr: Reads[Meh] = Json.reads[Meh]
 }
 
 case class UsagesResponse(length: Int, data: Seq[Meh])
 object UsagesResponse {
-  implicit val urr = Json.reads[UsagesResponse]
+  implicit val urr: Reads[UsagesResponse] = Json.reads[UsagesResponse]
 }

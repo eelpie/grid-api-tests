@@ -7,9 +7,11 @@ import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 
 import scala.concurrent.{Await, Future}
-import scala.concurrent.duration.{Duration, SECONDS}
+import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 
 class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables {
+
+  private val reasonableWait: FiniteDuration = Duration(20, SECONDS)
 
   private val wsClient = {
     implicit val system: ActorSystem = ActorSystem()
@@ -37,7 +39,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   def getUsages(imageId: String): UsagesResponse = {
     val url = getUsagesLink.replaceAll("\\{id}", imageId)
     val eventualResponse = authedGet(url)
-    val response = Await.result(eventualResponse, Duration(10, SECONDS))
+    val response = Await.result(eventualResponse, reasonableWait)
     Json.parse(response.body).as[UsagesResponse]
   }
 
@@ -55,7 +57,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
       withHttpHeaders("X-Gu-Media-Key" -> apiKey).
       post(Json.toJson(printUsageSubmission))
 
-    Await.result(eventualResponse, Duration(10, SECONDS))
+    Await.result(eventualResponse, reasonableWait)
   }
 
 
@@ -72,7 +74,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
       withHttpHeaders("X-Gu-Media-Key" -> apiKey).
       post(image)
 
-    val response = Await.result(eventualResponse, Duration(10, SECONDS))
+    val response = Await.result(eventualResponse, reasonableWait)
     if (response.status == 202) {
       Right(Json.parse(response.body).as[ImageUploadResponse])
     } else {
@@ -82,14 +84,14 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
 
   def getUploadStatus(uri: String): UploadStatusResponse = {
     val eventualResponse = authedGet(uri)
-    val response = Await.result(eventualResponse, Duration(10, SECONDS))
+    val response = Await.result(eventualResponse, reasonableWait)
     Json.parse(response.body).as[UploadStatusResponse]
   }
 
 
   private def loadServiceIndexPage(usagesBaseUrl: String): MediaApiResponse = {
     val eventualResponse = authedGet(usagesBaseUrl)
-    val response = Await.result(eventualResponse, Duration(10, SECONDS))
+    val response = Await.result(eventualResponse, reasonableWait)
     response.body[JsValue].as[MediaApiResponse]
   }
 

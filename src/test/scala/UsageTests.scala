@@ -1,3 +1,4 @@
+import org.joda.time.DateTime
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 
@@ -11,12 +12,13 @@ class UsageTests extends AnyFlatSpec with GridUnderTest {
     val imageId = imageUri.split("/").last
 
     val usageId = UUID.randomUUID().toString
+    val dataAdded = DateTime.now
 
     val printUsageSubmission = PrintUsageSubmission(
       printUsageRecords = Seq(
         PrintUsage(
           mediaId = imageId,
-          dateAdded = "2025-10-27",
+          dateAdded = dataAdded,
           printUsageMetadata = PrintUsageMetadata(
             issueDate = "2025-11-02",
             sectionCode = "TST",
@@ -36,10 +38,9 @@ class UsageTests extends AnyFlatSpec with GridUnderTest {
     gridApi.addPrintUsage(printUsageSubmission)
 
     val usages = gridApi.getUsages(imageId).data.map(_.data)
-    println(usages)
 
     // TODO assert actual usage was persisted
-    usages.nonEmpty mustBe true
+    usages.find(usage => usage.platform == "print" && usage.dateAdded == dataAdded)
   }
 
   private def uploadImage: String = {
