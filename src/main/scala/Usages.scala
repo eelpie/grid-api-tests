@@ -32,6 +32,18 @@ object PrintUsageSubmission {
   implicit val pusw: OFormat[PrintUsageSubmission] = Json.format[PrintUsageSubmission]
 }
 
+case class SyndicationUsageSubmission(mediaId: String, dateAdded: DateTime, partnerName: String)
+
+object SyndicationUsageSubmission {
+  import JodaWrites._
+  import JodaReads._
+  implicit val susf: OFormat[SyndicationUsageSubmission] = Json.format[SyndicationUsageSubmission]
+}
+
+case class SyndicationUsageRequest(data: SyndicationUsageSubmission)
+object SyndicationUsageRequest {
+  implicit val surf: OFormat[SyndicationUsageRequest] = Json.format[SyndicationUsageRequest]
+}
 
 case class Usage(id: String, platform: String, status: String, dateAdded: DateTime)
 object Usage {

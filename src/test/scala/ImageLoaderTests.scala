@@ -3,6 +3,14 @@ import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 
 class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
 
+  /*
+  "Image loader async end point" should
+    "prepare a presigned PUT url" in {
+      val presigned = gridApi.getUploadStatus(imageUploadResponse.right.get.uri).data
+  }
+*/
+
+
   "Image loader sync end point" should
     "accept uploaded JPEG images and return upload status" in {
     val image = getClass.getResourceAsStream("IMG_4525.JPG").readAllBytes()
@@ -40,4 +48,5 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
     imageUploadResponse.isLeft mustBe true
     imageUploadResponse.left.get mustBe "{\"errorKey\":\"unsupported-type\",\"errorMessage\":\"Unsupported mime-type: unknown. Supported: image/jpeg, image/png\"}"
   }
+
 }

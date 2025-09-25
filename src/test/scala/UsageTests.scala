@@ -12,13 +12,13 @@ class UsageTests extends AnyFlatSpec with GridUnderTest {
     val imageId = imageUri.split("/").last
 
     val usageId = UUID.randomUUID().toString
-    val dataAdded = DateTime.now
+    val dateAdded = DateTime.now
 
     val printUsageSubmission = PrintUsageSubmission(
       printUsageRecords = Seq(
         PrintUsage(
           mediaId = imageId,
-          dateAdded = dataAdded,
+          dateAdded = dateAdded,
           printUsageMetadata = PrintUsageMetadata(
             issueDate = "2025-11-02",
             sectionCode = "TST",
@@ -38,9 +38,26 @@ class UsageTests extends AnyFlatSpec with GridUnderTest {
     gridApi.addPrintUsage(printUsageSubmission)
 
     val usages = gridApi.getUsages(imageId).data.map(_.data)
+    usages.find(usage => usage.platform == "print" && usage.dateAdded == dateAdded && usage.status == "published")
+  }
 
-    // TODO assert actual usage was persisted
-    usages.find(usage => usage.platform == "print" && usage.dateAdded == dataAdded && usage.status == "published")
+  it should "allow syndication usages to be added to an image" in {
+    val imageUri = uploadImage
+    val imageId = imageUri.split("/").last
+
+    val dateAdded = DateTime.now
+
+    val usagesSubmission = SyndicationUsageSubmission(
+      mediaId = imageId,
+      dateAdded = dateAdded,
+      partnerName = "Our syndication partner"
+    )
+
+    gridApi.addSyndicationUsage(usagesSubmission)
+
+    val usages = gridApi.getUsages(imageId).data.map(_.data)
+    val addedUsage = usages.find(usage => usage.platform == "syndication" && usage.dateAdded == dateAdded)
+    addedUsage.nonEmpty mustBe true
   }
 
   private def uploadImage: String = {

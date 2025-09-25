@@ -52,6 +52,10 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     getUsageEndpoints.actions.flatMap(_.find(_.name == "print-usage").map(_.href)).get
   }
 
+  private def getUsageSyndicationUsageAction: String = {
+    getUsageEndpoints.actions.flatMap(_.find(_.name == "syndication-usage").map(_.href)).get
+  }
+
   def addPrintUsage(printUsageSubmission: PrintUsageSubmission): Unit = {
     val eventualResponse = wsClient.url(getUsagePrintUsageAction).
       withHttpHeaders("X-Gu-Media-Key" -> apiKey).
@@ -60,6 +64,14 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     Await.result(eventualResponse, reasonableWait)
   }
 
+  def addSyndicationUsage(syndicationUsageSubmission: SyndicationUsageSubmission): Unit = {
+    val action = getUsageSyndicationUsageAction
+    val eventualResponse = wsClient.url(action).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      post(Json.toJson(SyndicationUsageRequest(syndicationUsageSubmission)))
+
+    Await.result(eventualResponse, reasonableWait)
+  }
 
   def getImageLoaderLoadLink: String = {
     getImageLoaderEndpoints.links.find(_.rel == "load").get.href
