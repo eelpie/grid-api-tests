@@ -3,13 +3,11 @@ import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 
 class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
 
-  /*
   "Image loader async end point" should
-    "prepare a presigned PUT url" in {
-      val presigned = gridApi.getUploadStatus(imageUploadResponse.right.get.uri).data
+    "prepare presigned PUT URLs for media ids" in {
+      val result = gridApi.prepareUpload("123", "123.jpg")
+      result.isRight mustBe true
   }
-*/
-
 
   "Image loader sync end point" should
     "accept uploaded JPEG images and return upload status" in {

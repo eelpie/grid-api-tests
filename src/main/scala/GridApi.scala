@@ -77,6 +77,29 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     getImageLoaderEndpoints.links.find(_.rel == "load").get.href
   }
 
+  def getPrepareUploadLink: String = {
+    getImageLoaderEndpoints.links.find(_.rel == "prepare").get.href
+  }
+
+  def prepareUpload(mediaId: String, filename: String): Either[String, Map[String, String]] = {
+    val prepareEndpoint = getPrepareUploadLink
+
+    val mediaIdsToFilenamesMap = Map(
+      mediaId -> filename
+    )
+
+    val eventualResponse = wsClient.url(prepareEndpoint).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      post(Json.toJson(mediaIdsToFilenamesMap))
+
+    val response = Await.result(eventualResponse, reasonableWait)
+    if (response.status == 200) {
+      Right(Json.parse(response.body).as[Map[String, String]])
+    } else {
+      Left(response.body)
+    }
+  }
+
   def loadImage(image: Array[Byte]): Either[String, ImageUploadResponse] = {
     // TODO sync end point is not advertised?
     val prepareEndpoint = getImageLoaderLoadLink
