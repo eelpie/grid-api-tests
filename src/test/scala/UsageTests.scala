@@ -1,6 +1,9 @@
 import org.joda.time.DateTime
+import org.scalatest.concurrent.Eventually.eventually
+import org.scalatest.concurrent.Futures.{interval, timeout}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.time.{Millis, Seconds, Span}
 
 import java.util.UUID
 
@@ -55,9 +58,11 @@ class UsageTests extends AnyFlatSpec with GridUnderTest {
 
     gridApi.addSyndicationUsage(usagesSubmission)
 
-    val usages = gridApi.getUsages(imageId).data.map(_.data)
-    val addedUsage = usages.find(usage => usage.platform == "syndication" && usage.dateAdded == dateAdded)
-    addedUsage.nonEmpty mustBe true
+    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+      val usages = gridApi.getUsages(imageId).data.map(_.data)
+      val addedUsage = usages.find(usage => usage.platform == "syndication" && usage.dateAdded == dateAdded)
+      addedUsage.nonEmpty mustBe true
+    }
   }
 
   private def uploadImage: String = {
