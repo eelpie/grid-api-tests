@@ -1,5 +1,8 @@
+import org.scalatest.concurrent.Eventually.eventually
+import org.scalatest.concurrent.Futures.{interval, timeout}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.time.{Millis, Seconds, Span}
 
 import java.security.MessageDigest
 
@@ -12,7 +15,7 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
     }
 
   it should "ingest images PUT to pre signed upload URLs" in {
-    val filename = "IMG_3939.JPG"
+    val filename = "IMG_3938.JPG"
     val image = getClass.getResourceAsStream(filename).readAllBytes()
     val digest = MessageDigest.getInstance("SHA-1")
     val bytes = digest.digest(image)
@@ -20,12 +23,14 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
 
     val either = gridApi.prepareUpload(mediaId, filename)
     val uploadURL = either.right.get(mediaId)
-    println(uploadURL)
 
     val response = gridApi.putImage(uploadURL, mediaId, image)
     response.status mustBe 200
 
-    // TODO read back image
+    eventually(timeout(Span(10, Seconds)), interval(Span(100, Millis))) {
+      val maybeImage = gridApi.getImage(mediaId)
+      maybeImage.nonEmpty mustBe true
+    }
   }
 
   "Image loader sync end point" should

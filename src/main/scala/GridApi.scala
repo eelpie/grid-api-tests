@@ -127,6 +127,19 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     response
   }
 
+  def getImage(imageId: String): Option[JsValue] = {
+    val imageLink = getServiceEndpoints.links.find(_.rel == "image").get.href
+    val url = imageLink.replaceAll("\\{id}", imageId)
+
+    val eventualResponse = authedGet(url)
+    val response = Await.result(eventualResponse, reasonableWait)
+    if (response.status == 200) {
+      Some(Json.parse(response.body))
+    } else {
+      None
+    }
+  }
+
   def getUploadStatus(uri: String): UploadStatusResponse = {
     val eventualResponse = authedGet(uri)
     val response = Await.result(eventualResponse, reasonableWait)
