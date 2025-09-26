@@ -1,12 +1,31 @@
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 
+import java.security.MessageDigest
+
 class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
 
   "Image loader async end point" should
-    "prepare presigned PUT URLs for media ids" in {
+    "prepare presigned upload URLs for media ids" in {
       val result = gridApi.prepareUpload("123", "123.jpg")
       result.isRight mustBe true
+    }
+
+  it should "ingest images PUT to pre signed upload URLs" in {
+    val filename = "IMG_3939.JPG"
+    val image = getClass.getResourceAsStream(filename).readAllBytes()
+    val digest = MessageDigest.getInstance("SHA-1")
+    val bytes = digest.digest(image)
+    val mediaId = bytes.map("%02x".format(_)).mkString
+
+    val either = gridApi.prepareUpload(mediaId, filename)
+    val uploadURL = either.right.get(mediaId)
+    println(uploadURL)
+
+    val response = gridApi.putImage(uploadURL, mediaId, image)
+    response.status mustBe 200
+
+    // TODO read back image
   }
 
   "Image loader sync end point" should
