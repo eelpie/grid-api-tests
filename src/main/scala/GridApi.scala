@@ -163,12 +163,28 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     }
   }
 
-  def getUploadStatus(uri: String): UploadStatusResponse = {
-    val eventualResponse = authedGet(uri)
+  def getUploadStatusFor(imageId: String): Option[UploadStatusResponse] = {
+    val uploadStatusLink = getImageLoaderEndpoints.links.find(_.rel == "uploadStatus").map(_.href).get
+    val url = insertIdInto(uploadStatusLink, imageId)
+
+    val eventualResponse = authedGet(url)
     val response = Await.result(eventualResponse, reasonableWait)
-    Json.parse(response.body).as[UploadStatusResponse]
+    if (response.status == 200) {
+      Some(Json.parse(response.body).as[UploadStatusResponse])
+    } else {
+      None
+    }
   }
 
+  def getUploadStatusByURI(uri: String): Option[UploadStatusResponse] = {
+    val eventualResponse = authedGet(uri)
+    val response = Await.result(eventualResponse, reasonableWait)
+    if (response.status == 200) {
+      Some(Json.parse(response.body).as[UploadStatusResponse])
+    }  else {
+      None
+    }
+  }
 
   private def loadServiceIndexPage(usagesBaseUrl: String): MediaApiResponse = {
     val eventualResponse = authedGet(usagesBaseUrl)

@@ -69,8 +69,8 @@ class UsageTests extends AnyFlatSpec with GridUnderTest {
     val image = getClass.getResourceAsStream("poppies.tif").readAllBytes()
     val imageUploadResponse = gridApi.loadImage(image)
     imageUploadResponse.isRight mustBe true
-    val uploadStatusResponse = gridApi.getUploadStatus(imageUploadResponse.right.get.uri)
-    val imageUri = uploadStatusResponse.uri
+    val uploadStatusResponse = gridApi.getUploadStatusByURI(imageUploadResponse.right.get.uri)
+    val imageUri = uploadStatusResponse.get.uri
     imageUri
   }
 

@@ -9,10 +9,16 @@ import java.security.MessageDigest
 class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
 
   "Image loader async end point" should
-    "prepare presigned upload URLs for media ids" in {
-      val result = gridApi.prepareUpload("123", "123.jpg")
-      result.isRight mustBe true
-    }
+    "prepare presigned upload URLs for media ids and set upload status to prepared" in {
+    val mediaId = "123"
+
+    val result = gridApi.prepareUpload(mediaId, "123.jpg")
+    result.isRight mustBe true
+
+    val maybePresignedURLForMediaId = result.right.get.get("123")
+    maybePresignedURLForMediaId.nonEmpty mustBe true
+    gridApi.getUploadStatusFor(mediaId).map(_.data.status) mustBe Some("PREPARED")
+  }
 
   it should "ingest images PUT to pre signed upload URLs" in {
     val filename = "IMG_3938.JPG"
@@ -23,8 +29,8 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
     val uploadURL = either.right.get(mediaId)
 
     val response = gridApi.putImage(uploadURL, mediaId, image)
-    response.status mustBe 200
 
+    response.status mustBe 200
     eventually(timeout(Span(10, Seconds)), interval(Span(100, Millis))) {
       val maybeImage = gridApi.getImage(mediaId)
       maybeImage.nonEmpty mustBe true
@@ -32,25 +38,43 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
     }
   }
 
+  it should "eventually report completed upload status" in {
+    val filename = "IMG_3938.JPG"
+    val image = getClass.getResourceAsStream(filename).readAllBytes()
+    val mediaId = digestFor(image)
+
+    val either = gridApi.prepareUpload(mediaId, filename)
+    val uploadURL = either.right.get(mediaId)
+
+    gridApi.putImage(uploadURL, mediaId, image)
+
+    eventually(timeout(Span(10, Seconds)), interval(Span(100, Millis))) {
+      val maybeUploadStatus = gridApi.getUploadStatusFor(mediaId)
+
+      val maybeUploadStatusStatus = maybeUploadStatus.map(_.data.status)
+      maybeUploadStatusStatus mustBe Some("COMPLETED")
+    }
+  }
+
   "Image loader sync end point" should
-    "accept uploaded JPEG images and return upload status" in {
+    "accept uploaded JPEG images and return upload status URL" in {
     val image = getClass.getResourceAsStream("IMG_4525.JPG").readAllBytes()
 
     val imageUploadResponse = gridApi.loadImage(image)
-    imageUploadResponse.isRight mustBe true
 
-    val uploadStatus = gridApi.getUploadStatus(imageUploadResponse.right.get.uri).data
+    imageUploadResponse.isRight mustBe true
+    val uploadStatus = gridApi.getUploadStatusByURI(imageUploadResponse.right.get.uri).get.data
     uploadStatus.status mustBe "COMPLETED"
   }
 
-  it should "accept uploaded TIFF images and return upload status" in {
+  it should "accept uploaded TIFF images" in {
     val image = getClass.getResourceAsStream("poppies.tif").readAllBytes()
 
     val imageUploadResponse = gridApi.loadImage(image)
     imageUploadResponse.isRight mustBe true
 
     // TODO image/tif is not included in supported mime-types list. Need to understand why this is been accepted and gif is not
-    val uploadStatus = gridApi.getUploadStatus(imageUploadResponse.right.get.uri).data
+    val uploadStatus = gridApi.getUploadStatusByURI(imageUploadResponse.right.get.uri).get.data
     uploadStatus.status mustBe "COMPLETED"
   }
 
@@ -74,5 +98,5 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
     val digest = MessageDigest.getInstance("SHA-1")
     digest.digest(image).map("%02x".format(_)).mkString
   }
-
 }
+
