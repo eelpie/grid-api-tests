@@ -17,9 +17,7 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
   it should "ingest images PUT to pre signed upload URLs" in {
     val filename = "IMG_3938.JPG"
     val image = getClass.getResourceAsStream(filename).readAllBytes()
-    val digest = MessageDigest.getInstance("SHA-1")
-    val bytes = digest.digest(image)
-    val mediaId = bytes.map("%02x".format(_)).mkString
+    val mediaId = digestFor(image)
 
     val either = gridApi.prepareUpload(mediaId, filename)
     val uploadURL = either.right.get(mediaId)
@@ -70,6 +68,11 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
     val imageUploadResponse = gridApi.loadImage(image)
     imageUploadResponse.isLeft mustBe true
     imageUploadResponse.left.get mustBe "{\"errorKey\":\"unsupported-type\",\"errorMessage\":\"Unsupported mime-type: unknown. Supported: image/jpeg, image/png\"}"
+  }
+
+  private def digestFor(image: Array[Byte]) = {
+    val digest = MessageDigest.getInstance("SHA-1")
+    digest.digest(image).map("%02x".format(_)).mkString
   }
 
 }
