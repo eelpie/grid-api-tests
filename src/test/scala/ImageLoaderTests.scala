@@ -9,7 +9,7 @@ import java.security.MessageDigest
 class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
 
   "Image loader async end point" should
-    "prepare presigned upload URLs for media ids and set upload status to prepared" in {
+    "prepare pre signed upload URLs for media ids and set upload status to prepared" in {
     val mediaId = "123"
 
     val result = gridApi.prepareUpload(mediaId, "123.jpg")
@@ -53,6 +53,25 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
 
       val maybeUploadStatusStatus = maybeUploadStatus.map(_.data.status)
       maybeUploadStatusStatus mustBe Some("COMPLETED")
+    }
+  }
+
+  it should "reject unsupported file types and set upload status to failed" in {
+    val filename = "test.txt"
+    val image = getClass.getResourceAsStream(filename).readAllBytes()
+    val mediaId = digestFor(image)
+
+    val either = gridApi.prepareUpload(mediaId, filename)
+    val uploadURL = either.right.get(mediaId)
+
+    gridApi.putImage(uploadURL, mediaId, image)
+
+    eventually(timeout(Span(10, Seconds)), interval(Span(100, Millis))) {
+      val maybeUploadStatus = gridApi.getUploadStatusFor(mediaId)
+
+      val maybeUploadStatusStatus = maybeUploadStatus.map(_.data.status)
+      maybeUploadStatusStatus mustBe Some("FAILED")
+      // TODO any human readable feedback available?
     }
   }
 
