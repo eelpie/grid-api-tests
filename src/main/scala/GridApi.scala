@@ -163,6 +163,17 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     }
   }
 
+  def getFileMetadata(image: Image): Option[FileMetadata] = {
+    val eventualResponse = authedGet(image.fileMetadata.uri)
+    val response = Await.result(eventualResponse, reasonableWait)
+    if (response.status == 200) {
+      val data = Json.parse(response.body) \ "data"
+      Some(data.as[FileMetadata])
+    } else {
+      None
+    }
+  }
+
   def getUploadStatusFor(imageId: String): Option[UploadStatusResponse] = {
     val uploadStatusLink = getImageLoaderEndpoints.links.find(_.rel == "uploadStatus").map(_.href).get
     getUploadStatusByURI(insertIdInto(uploadStatusLink, imageId))
@@ -173,7 +184,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     val response = Await.result(eventualResponse, reasonableWait)
     if (response.status == 200) {
       Some(Json.parse(response.body).as[UploadStatusResponse])
-    }  else {
+    } else {
       None
     }
   }
