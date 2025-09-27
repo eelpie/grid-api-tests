@@ -8,10 +8,10 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import java.util.UUID
 
 
-class UsageTests extends AnyFlatSpec with GridUnderTest {
+class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   "Usages API" should "allow print usages to be added to an image" in {
-    val imageUri = uploadImage
+    val imageUri = uploadImage("poppies.tif")
     val imageId = imageUri.split("/").last
 
     val usageId = UUID.randomUUID().toString
@@ -45,7 +45,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest {
   }
 
   it should "allow syndication usages to be added to an image" in {
-    val imageUri = uploadImage
+    val imageUri = uploadImage("poppies.tif")
     val imageId = imageUri.split("/").last
 
     val dateAdded = DateTime.now
@@ -63,15 +63,6 @@ class UsageTests extends AnyFlatSpec with GridUnderTest {
       val addedUsage = usages.find(usage => usage.platform == "syndication" && usage.dateAdded == dateAdded)
       addedUsage.nonEmpty mustBe true
     }
-  }
-
-  private def uploadImage: String = {
-    val image = getClass.getResourceAsStream("poppies.tif").readAllBytes()
-    val imageUploadResponse = gridApi.loadImage(image)
-    imageUploadResponse.isRight mustBe true
-    val uploadStatusResponse = gridApi.getUploadStatusByURI(imageUploadResponse.right.get.uri)
-    val imageUri = uploadStatusResponse.get.uri
-    imageUri
   }
 
 }

@@ -7,7 +7,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import java.util.UUID
 
 
-class MetadataTests extends AnyFlatSpec with GridUnderTest {
+class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   "Metadata API" should "allow image metadata to be set" in {
     val imageUri = uploadImage("poppies.tif")
@@ -27,15 +27,6 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest {
       image.metadata.title mustBe Some(newTitle)
       image.metadata.description mustBe Some(newDescription)
     }
-  }
-
-  private def uploadImage(filename: String): String = {
-    val image = getClass.getResourceAsStream(filename).readAllBytes()
-    val imageUploadResponse = gridApi.loadImage(image)
-    imageUploadResponse.isRight mustBe true
-    val uploadStatusResponse = gridApi.getUploadStatusByURI(imageUploadResponse.right.get.uri)
-    val imageUri = uploadStatusResponse.get.uri
-    imageUri
   }
 
 }
