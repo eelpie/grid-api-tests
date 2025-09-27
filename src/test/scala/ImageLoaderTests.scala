@@ -30,6 +30,7 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
     eventually(timeout(Span(10, Seconds)), interval(Span(100, Millis))) {
       val maybeImage = gridApi.getImage(mediaId)
       maybeImage.nonEmpty mustBe true
+      maybeImage.get.id mustBe mediaId
     }
   }
 

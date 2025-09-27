@@ -1,13 +1,13 @@
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.{Materializer, SystemMaterializer}
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.ws.{DefaultBodyWritables, StandaloneWSRequest}
 import play.api.libs.ws.JsonBodyReadables.readableAsJson
 import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
+import play.api.libs.ws.{DefaultBodyWritables, StandaloneWSRequest}
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
+import scala.concurrent.{Await, Future}
 
 class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables {
 
@@ -36,6 +36,11 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     loadServiceIndexPage(usageLink.href)
   }
 
+  def getMetadataEndpoints: MediaApiResponse = {
+    val editsLinks = getServiceEndpoints.links.find(_.rel == "edits").get
+    loadServiceIndexPage(editsLinks.href)
+  }
+
   def getUsages(imageId: String): UsagesResponse = {
     val url = getUsagesLink.replaceAll("\\{id}", imageId)
     val eventualResponse = authedGet(url)
@@ -54,6 +59,24 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
 
   private def getUsageSyndicationUsageAction: String = {
     getUsageEndpoints.actions.flatMap(_.find(_.name == "syndication-usage").map(_.href)).get
+  }
+
+  private def getSetMetadataLink: String = {
+    getMetadataEndpoints.links.find(_.rel == "metadata").map(_.href).get
+  }
+
+  def setMetadata(imageId: String, updatedMetadata: Map[String, String]): Unit = {
+    val url = insertIdInto(getSetMetadataLink, imageId)
+
+    val data = Map(
+      "data" -> updatedMetadata
+    )
+
+    val eventualResponse = wsClient.url(url).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      put(Json.toJson(data))
+
+    Await.result(eventualResponse, reasonableWait)
   }
 
   def addPrintUsage(printUsageSubmission: PrintUsageSubmission): Unit = {
@@ -127,14 +150,14 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     response
   }
 
-  def getImage(imageId: String): Option[JsValue] = {
+  def getImage(imageId: String): Option[Image] = {
     val imageLink = getServiceEndpoints.links.find(_.rel == "image").get.href
-    val url = imageLink.replaceAll("\\{id}", imageId)
-
+    val url = insertIdInto(imageLink, imageId)
     val eventualResponse = authedGet(url)
     val response = Await.result(eventualResponse, reasonableWait)
     if (response.status == 200) {
-      Some(Json.parse(response.body))
+      val data = Json.parse(response.body) \ "data"
+      Some(data.as[Image])
     } else {
       None
     }
@@ -158,6 +181,10 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     wsClient.url(uri).
       withHttpHeaders("X-Gu-Media-Key" -> apiKey).
       get()
+  }
+
+  private def insertIdInto(link: String, id: String): String = {
+    link.replaceAll("\\{id}", id)
   }
 
 }
