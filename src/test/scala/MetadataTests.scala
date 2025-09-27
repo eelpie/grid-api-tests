@@ -10,7 +10,7 @@ import java.util.UUID
 class MetadataTests extends AnyFlatSpec with GridUnderTest {
 
   "Metadata API" should "allow image metadata to be set" in {
-    val imageUri = uploadImage
+    val imageUri = uploadImage("poppies.tif")
     val imageId = imageUri.split("/").last
 
     val newTitle = UUID.randomUUID().toString
@@ -29,8 +29,8 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest {
     }
   }
 
-  private def uploadImage: String = {
-    val image = getClass.getResourceAsStream("poppies.tif").readAllBytes()
+  private def uploadImage(filename: String): String = {
+    val image = getClass.getResourceAsStream(filename).readAllBytes()
     val imageUploadResponse = gridApi.loadImage(image)
     imageUploadResponse.isRight mustBe true
     val uploadStatusResponse = gridApi.getUploadStatusByURI(imageUploadResponse.right.get.uri)

@@ -165,15 +165,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
 
   def getUploadStatusFor(imageId: String): Option[UploadStatusResponse] = {
     val uploadStatusLink = getImageLoaderEndpoints.links.find(_.rel == "uploadStatus").map(_.href).get
-    val url = insertIdInto(uploadStatusLink, imageId)
-
-    val eventualResponse = authedGet(url)
-    val response = Await.result(eventualResponse, reasonableWait)
-    if (response.status == 200) {
-      Some(Json.parse(response.body).as[UploadStatusResponse])
-    } else {
-      None
-    }
+    getUploadStatusByURI(insertIdInto(uploadStatusLink, imageId))
   }
 
   def getUploadStatusByURI(uri: String): Option[UploadStatusResponse] = {
@@ -200,7 +192,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   }
 
   private def insertIdInto(link: String, id: String): String = {
-    link.replaceAll("\\{id}", id)
+    link.replaceAll("""\{id}""", id)
   }
 
 }

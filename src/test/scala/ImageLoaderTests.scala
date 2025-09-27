@@ -63,8 +63,8 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
     val imageUploadResponse = gridApi.loadImage(image)
 
     imageUploadResponse.isRight mustBe true
-    val uploadStatus = gridApi.getUploadStatusByURI(imageUploadResponse.right.get.uri).get.data
-    uploadStatus.status mustBe "COMPLETED"
+    val uploadStatus = gridApi.getUploadStatusByURI(imageUploadResponse.right.get.uri).get
+    uploadStatus.data.status mustBe "COMPLETED"
   }
 
   it should "accept uploaded TIFF images" in {
@@ -74,8 +74,8 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
     imageUploadResponse.isRight mustBe true
 
     // TODO image/tif is not included in supported mime-types list. Need to understand why this is been accepted and gif is not
-    val uploadStatus = gridApi.getUploadStatusByURI(imageUploadResponse.right.get.uri).get.data
-    uploadStatus.status mustBe "COMPLETED"
+    val uploadStatus = gridApi.getUploadStatusByURI(imageUploadResponse.right.get.uri).get
+    uploadStatus.data.status mustBe "COMPLETED"
   }
 
   it should "reject unsupported image types" in {
