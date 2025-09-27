@@ -14,8 +14,10 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest {
     val imageId = imageUri.split("/").last
 
     val newTitle = UUID.randomUUID().toString
+    val newDescription = UUID.randomUUID().toString
     val updatedMetadata = Map(
-      "title" -> newTitle
+      "title" -> newTitle,
+      "description" -> newDescription,
     )
 
     gridApi.setMetadata(imageId, updatedMetadata)
@@ -23,6 +25,7 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest {
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
       val image = gridApi.getImage(imageId).get
       image.metadata.title mustBe Some(newTitle)
+      image.metadata.description mustBe Some(newDescription)
     }
   }
 
