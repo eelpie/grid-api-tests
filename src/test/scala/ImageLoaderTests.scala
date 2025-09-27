@@ -13,8 +13,8 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
     val mediaId = "123"
 
     val result = gridApi.prepareUpload(mediaId, "123.jpg")
-    result.isRight mustBe true
 
+    result.isRight mustBe true
     val maybePresignedURLForMediaId = result.right.get.get("123")
     maybePresignedURLForMediaId.nonEmpty mustBe true
     gridApi.getUploadStatusFor(mediaId).map(_.data.status) mustBe Some("PREPARED")
@@ -71,7 +71,7 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
 
       val maybeUploadStatusStatus = maybeUploadStatus.map(_.data.status)
       maybeUploadStatusStatus mustBe Some("FAILED")
-      // TODO any human readable feedback available?
+      maybeUploadStatus.flatMap(_.data.errorMessage) mustBe Some("com.gu.mediaservice.model.UnsupportedMimeTypeException: null")
     }
   }
 

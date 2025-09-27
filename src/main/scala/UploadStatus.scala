@@ -1,7 +1,7 @@
 import play.api.libs.json.{Json, Reads}
 
 
-case class UploadStatus(status: String)
+case class UploadStatus(status: String, errorMessage: Option[String])
 
 object UploadStatus {
   implicit val upr: Reads[UploadStatus] = Json.reads[UploadStatus]
