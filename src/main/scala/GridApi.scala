@@ -61,12 +61,16 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     getUsageEndpoints.actions.flatMap(_.find(_.name == "syndication-usage").map(_.href)).get
   }
 
-  private def getSetMetadataLink: String = {
+  private def getMetadataLink: String = {
     getMetadataEndpoints.links.find(_.rel == "metadata").map(_.href).get
   }
 
+  private def getUsageRightsLink: String = {
+    getMetadataEndpoints.links.find(_.rel == "usageRights").map(_.href).get
+  }
+
   def setMetadata(imageId: String, updatedMetadata: Map[String, String]): Unit = {
-    val url = insertIdInto(getSetMetadataLink, imageId)
+    val url = insertIdInto(getMetadataLink, imageId)
 
     val data = Map(
       "data" -> updatedMetadata
@@ -77,6 +81,25 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
       put(Json.toJson(data))
 
     Await.result(eventualResponse, reasonableWait)
+  }
+
+  def setUsageRights(imageId: String, newUsagesRights: Map[String, String]): Either[String, Unit] = {
+    val url = insertIdInto(getUsageRightsLink, imageId)
+
+    val data = Map(
+      "data" -> newUsagesRights
+    )
+
+    val eventualResponse = wsClient.url(url).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      put(Json.toJson(data))
+
+    val response = Await.result(eventualResponse, reasonableWait)
+    if (response.status == 200) {
+      Right()
+    } else {
+      Left(response.body)
+    }
   }
 
   def addPrintUsage(printUsageSubmission: PrintUsageSubmission): Unit = {

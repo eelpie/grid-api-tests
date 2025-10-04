@@ -34,7 +34,7 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     maybeImage.flatMap(_.metadata.credit) mustBe Some("IPTC")
   }
 
-  "Metadata API" should "allow image metadata to be set" in {
+  "Metadata editing" should "allow image metadata to be set" in {
     val imageUri = uploadImage("poppies.tif")
     val imageId = imageUri.split("/").last
 
@@ -51,6 +51,28 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       val image = gridApi.getImage(imageId).get
       image.metadata.title mustBe Some(newTitle)
       image.metadata.description mustBe Some(newDescription)
+    }
+  }
+
+  it should "allow rights and restrictions to be set for an image" in {
+    val imageUri = uploadImage("poppies.tif")
+    val imageId = imageUri.split("/").last
+
+    val newPhotographer = UUID.randomUUID().toString
+
+    val newUsagesRights = Map(
+      "publication" -> "Test",  // TODO how important is in that this matches config?
+      "category" -> "staff-photographer", // TODO source from API
+      "photographer" -> newPhotographer
+    )
+
+    val result = gridApi.setUsageRights(imageId, newUsagesRights)
+
+    result.isRight mustBe true
+    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+      val image = gridApi.getImage(imageId).get
+      image.usageRights.category mustBe Some("staff-photographer")
+      image.usageRights.photographer mustBe Some(newPhotographer)
     }
   }
 
