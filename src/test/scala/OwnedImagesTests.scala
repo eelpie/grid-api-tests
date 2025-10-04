@@ -12,7 +12,7 @@ class OwnedImagesTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   "Owned images" should "include images with owned usage rights" in {
     val imageIds = testImagesSet.map { image =>
-      val imageUri = uploadImage("poppies.tif")
+      val imageUri = uploadImage(image)
       val imageId = imageUri.split("/").last
       imageId
     }
@@ -28,7 +28,7 @@ class OwnedImagesTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     }
 
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
-      val images = gridApi.getOwnedImages()
+      val images = gridApi.getImages(q = Some("is:owned"))
       val imageIdsInSearchResponse = images.map(_.id)
       imageIds.forall(imageIdsInSearchResponse.contains) mustBe true
     }
