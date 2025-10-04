@@ -186,6 +186,17 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     }
   }
 
+  def getOwnedImages(): Seq[Image] = {
+    val searchLink = getServiceEndpoints.links.find(_.rel == "search").get.href
+    val url = searchLink.replaceAll("""\{.*?}""", "") + "?q=is%3Aowned" // TODO proper parameter encoding
+
+    val eventualResponse = authedGet(url)
+    val response = Await.result(eventualResponse, reasonableWait)
+
+    val imageSearchResponse = Json.parse(response.body).as[ImageSearchResponse]
+    imageSearchResponse.data.map(_.data)
+  }
+
   def getFileMetadata(image: Image): Option[FileMetadata] = {
     val eventualResponse = authedGet(image.fileMetadata.uri)
     val response = Await.result(eventualResponse, reasonableWait)
