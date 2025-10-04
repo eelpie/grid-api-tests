@@ -8,7 +8,7 @@ import java.util.UUID
 
 class OwnedImagesTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
-  val testImagesSet = Set("poppies.tif")
+  val testImagesSet = Set("IMG_3938.JPG", "IMG_3938.JPG", "IMG_4470.JPG")
 
   "Owned images" should "include images with owned usage rights" in {
     val imageIds = testImagesSet.map { image =>
