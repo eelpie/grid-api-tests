@@ -1,5 +1,6 @@
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.{Materializer, SystemMaterializer}
+import org.joda.time.DateTime
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.JsonBodyReadables.readableAsJson
 import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
@@ -31,6 +32,11 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     loadServiceIndexPage(loaderLink.href)
   }
 
+  def getLeaseEndpoints: MediaApiResponse = {
+    val leaseLink = getServiceEndpoints.links.find(_.rel == "leases").get
+    loadServiceIndexPage(leaseLink.href)
+  }
+
   def getUsageEndpoints: MediaApiResponse = {
     val usageLink = getServiceEndpoints.links.find(_.rel == "usage").get
     loadServiceIndexPage(usageLink.href)
@@ -39,6 +45,20 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   def getMetadataEndpoints: MediaApiResponse = {
     val editsLinks = getServiceEndpoints.links.find(_.rel == "edits").get
     loadServiceIndexPage(editsLinks.href)
+  }
+
+  def getLeases(imageId: String): Either[Unit, Seq[Lease]] = {
+    val links: MediaApiResponse = getLeaseEndpoints
+    val byMediaIdLink = links.links.find(_.rel == "by-media-id").get
+    val url = insertIdInto(byMediaIdLink.href, imageId)
+
+    val eventualResponse = authedGet(url)
+    val response = Await.result(eventualResponse, reasonableWait)
+    if (response.status == 200) {
+      Right((Json.parse(response.body) \ "data" \ "leases").as[Seq[Lease]])
+    } else {
+      Left()
+    }
   }
 
   def getUsages(imageId: String): UsagesResponse = {
@@ -51,7 +71,6 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   private def getUsagesLink: String = {
     getUsageEndpoints.links.find(_.rel == "usages-by-media").map(_.href).get
   }
-
 
   private def getUsagePrintUsageAction: String = {
     getUsageEndpoints.actions.flatMap(_.find(_.name == "print-usage").map(_.href)).get
@@ -115,6 +134,24 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     val eventualResponse = wsClient.url(action).
       withHttpHeaders("X-Gu-Media-Key" -> apiKey).
       post(Json.toJson(SyndicationUsageRequest(syndicationUsageSubmission)))
+
+    Await.result(eventualResponse, reasonableWait)
+  }
+
+  def addSyndicationLease(imageId: String): Unit = {
+    val leaseEndpoints: MediaApiResponse = getLeaseEndpoints
+    val leasesLink = leaseEndpoints.links.find(_.rel == "leases").get
+    val url = leasesLink.href.split("/\\{").head
+
+    val leaseSubmission = LeaseSubmission(
+      mediaId = imageId,
+      createdAt = DateTime.now,
+      access = "allow-syndication"
+    )
+
+    val eventualResponse = wsClient.url(url).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      post(Json.toJson(leaseSubmission))
 
     Await.result(eventualResponse, reasonableWait)
   }
@@ -186,9 +223,9 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     }
   }
 
-  def getOwnedImages(): Seq[Image] = {
+  def getImages(q: Option[String]): Seq[Image] = {
     val searchLink = getServiceEndpoints.links.find(_.rel == "search").get.href
-    val url = searchLink.replaceAll("""\{.*?}""", "") + "?q=is%3Aowned" // TODO proper parameter encoding
+    val url = searchLink.replaceAll("""\{.*?}""", "") + q.map(q => "?q=" + q).getOrElse("") // TODO proper parameter encoding
 
     val eventualResponse = authedGet(url)
     val response = Await.result(eventualResponse, reasonableWait)
