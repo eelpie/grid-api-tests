@@ -108,7 +108,6 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     result.isRight mustBe true
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
       val updatedImage = gridApi.getImage(image.id).get
-      println(updatedImage.usageRights)
       updatedImage.usageRights.category mustBe Some("commissioned-agency")
       updatedImage.usageRights.supplier mustBe Some(supplier)
     }
