@@ -50,7 +50,7 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     }
   }
 
-  it should "allow rights and restrictions to be set for an image" in {
+  it should "allow usage rights to be set for an image" in {
     val image = uploadImage("poppies.tif")
 
     val newPhotographer = UUID.randomUUID().toString
@@ -68,6 +68,49 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       val updatedImage = gridApi.getImage(image.id).get
       updatedImage.usageRights.category mustBe Some("staff-photographer")
       updatedImage.usageRights.photographer mustBe Some(newPhotographer)
+    }
+  }
+
+  it should "allow agency subscription usage rights to be set for an image" in {
+    val image = uploadImage("poppies.tif")
+
+    val supplier = UUID.randomUUID().toString
+
+    val newUsagesRights = Map(
+      "publication" -> "Test", // TODO how important is in that this matches config?
+      "category" -> "agency", // TODO source from API
+      "supplier" -> supplier
+    )
+
+    val result = gridApi.setUsageRights(image.id, newUsagesRights)
+
+    result.isRight mustBe true
+    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+      val updatedImage = gridApi.getImage(image.id).get
+      updatedImage.usageRights.category mustBe Some("agency")
+      updatedImage.usageRights.supplier mustBe Some(supplier)
+    }
+  }
+
+  it should "allow agency commissioned usage rights to be set for an image" in {
+    val image = uploadImage("poppies.tif")
+
+    val supplier = UUID.randomUUID().toString
+
+    val newUsagesRights = Map(
+      "publication" -> "Test", // TODO how important is in that this matches config?
+      "category" -> "commissioned-agency", // TODO source from API
+      "supplier" -> supplier
+    )
+
+    val result = gridApi.setUsageRights(image.id, newUsagesRights)
+
+    result.isRight mustBe true
+    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+      val updatedImage = gridApi.getImage(image.id).get
+      println(updatedImage.usageRights)
+      updatedImage.usageRights.category mustBe Some("commissioned-agency")
+      updatedImage.usageRights.supplier mustBe Some(supplier)
     }
   }
 

@@ -6,7 +6,7 @@ object Metadata {
   implicit val ir: Reads[Metadata] = Json.reads[Metadata]
 }
 
-case class UsageRights(category: Option[String], photographer: Option[String], publication: Option[String])
+case class UsageRights(category: Option[String], photographer: Option[String], publication: Option[String], supplier: Option[String])
 
 object UsageRights {
   implicit val urr: Reads[UsageRights] = Json.reads[UsageRights]
