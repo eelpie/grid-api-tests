@@ -11,8 +11,7 @@ import java.util.UUID
 class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   "Usages API" should "allow print usages to be added to an image" in {
-    val imageUri = uploadImage("poppies.tif")
-    val imageId = imageUri.split("/").last
+    val image = uploadImage("poppies.tif")
 
     val usageId = UUID.randomUUID().toString
     val dateAdded = DateTime.now
@@ -20,7 +19,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     val printUsageSubmission = PrintUsageSubmission(
       printUsageRecords = Seq(
         PrintUsage(
-          mediaId = imageId,
+          mediaId = image.id,
           dateAdded = dateAdded,
           printUsageMetadata = PrintUsageMetadata(
             issueDate = "2025-11-02",
@@ -40,18 +39,17 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
     gridApi.addPrintUsage(printUsageSubmission)
 
-    val usages = gridApi.getUsages(imageId).data.map(_.data)
+    val usages = gridApi.getUsages(image.id).data.map(_.data)
     usages.find(usage => usage.platform == "print" && usage.dateAdded == dateAdded && usage.status == "published")
   }
 
   it should "allow syndication usages to be added to an image" in {
-    val imageUri = uploadImage("poppies.tif")
-    val imageId = imageUri.split("/").last
+    val image = uploadImage("poppies.tif")
 
     val dateAdded = DateTime.now
 
     val usagesSubmission = SyndicationUsageSubmission(
-      mediaId = imageId,
+      mediaId = image.id,
       dateAdded = dateAdded,
       partnerName = "Our syndication partner"
     )
@@ -59,7 +57,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     gridApi.addSyndicationUsage(usagesSubmission)
 
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
-      val usages = gridApi.getUsages(imageId).data.map(_.data)
+      val usages = gridApi.getUsages(image.id).data.map(_.data)
       val addedUsage = usages.find(usage => usage.platform == "syndication" && usage.dateAdded == dateAdded)
       addedUsage.nonEmpty mustBe true
     }

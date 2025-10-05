@@ -10,27 +10,25 @@ class OwnedImagesTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   val testImagesSet = Set("IMG_3938.JPG", "IMG_3938.JPG", "IMG_4470.JPG")
 
-  "Owned images" should "include images with owned usage rights" in {
-    val imageIds = testImagesSet.map { image =>
-      val imageUri = uploadImage(image)
-      val imageId = imageUri.split("/").last
-      imageId
+  "Owned images" should "include images with staff photographer rights" in {
+    val images = testImagesSet.map { filename =>
+      uploadImage(filename)
     }
 
-    imageIds.foreach { imageId =>
+    images.foreach { image =>
       val newPhotographer = UUID.randomUUID().toString
       val newUsagesRights = Map(
         "publication" -> "Test", // TODO how important is in that this matches config?
         "category" -> "staff-photographer", // TODO source from API
         "photographer" -> newPhotographer
       )
-      gridApi.setUsageRights(imageId, newUsagesRights).isRight mustBe true
+      gridApi.setUsageRights(image.id, newUsagesRights).isRight mustBe true
     }
 
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
       val images = gridApi.getImages(q = Some("is:owned"))
       val imageIdsInSearchResponse = images.map(_.id)
-      imageIds.forall(imageIdsInSearchResponse.contains) mustBe true
+      images.map(_.id).forall(imageIdsInSearchResponse.contains) mustBe true
     }
   }
 

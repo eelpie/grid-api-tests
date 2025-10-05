@@ -17,108 +17,100 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
   private val forNotOwnedButLeased = grouped(3)
 
   "Syndication filter" should "include owned images in review view" in {
-    val imageIds = forReview.map { image =>
-      val imageUri = uploadImage(image)
-      val imageId = imageUri.split("/").last
-      imageId
+    val images = forReview.map { filename =>
+      uploadImage(filename)
     }
 
-    imageIds.foreach { imageId =>
+    images.foreach { image =>
       val newPhotographer = UUID.randomUUID().toString
       val newUsagesRights = Map(
         "publication" -> "Test", // TODO how important is in that this matches config?
         "category" -> "staff-photographer", // TODO source from API
         "photographer" -> newPhotographer
       )
-      gridApi.setUsageRights(imageId, newUsagesRights).isRight mustBe true
+      gridApi.setUsageRights(image.id, newUsagesRights).isRight mustBe true
     }
 
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
       val images = gridApi.getImages(q = Some("+syndicationStatus:review"))
       val imageIdsInSearchResponse = images.map(_.id)
-      imageIds.forall(imageIdsInSearchResponse.contains) mustBe true
+      images.map(_.id).forall(imageIdsInSearchResponse.contains) mustBe true
     }
   }
 
   it should "include owned images with a syndication lease in queued" in {
-    val imageIds = forQueued.map { image =>
-      val imageUri = uploadImage(image)
-      val imageId = imageUri.split("/").last
-      imageId
+    val images = forQueued.map { filename =>
+      uploadImage(filename)
     }
 
-    imageIds.foreach { imageId =>
+    images.foreach { image =>
       val newPhotographer = UUID.randomUUID().toString
       val newUsagesRights = Map(
         "publication" -> "Test", // TODO how important is in that this matches config?
         "category" -> "staff-photographer", // TODO source from API
         "photographer" -> newPhotographer
       )
-      gridApi.setUsageRights(imageId, newUsagesRights).isRight mustBe true
+      gridApi.setUsageRights(image.id, newUsagesRights).isRight mustBe true
     }
-    imageIds.foreach { imageId =>
-      gridApi.addSyndicationLease(imageId)
+    images.foreach { image =>
+      gridApi.addSyndicationLease(image.id)
     }
 
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
       val images = gridApi.getImages(q = Some("+syndicationStatus:queued"))
       val imageIdsInSearchResponse = images.map(_.id)
-      imageIds.forall(imageIdsInSearchResponse.contains) mustBe true
+      images.map(_.id).forall(imageIdsInSearchResponse.contains) mustBe true
     }
   }
 
   it should "show non owned images as unsuitable" in {
-    val imageIds = forNotOwned.map { image =>
-      val imageUri = uploadImage(image)
-      val imageId = imageUri.split("/").last
-      imageId
+    val images = forNotOwned.map { filename =>
+     uploadImage(filename)
     }
 
-    imageIds.foreach { imageId =>
+    images.foreach { image =>
       val newUsagesRights = Map(
         "publication" -> "Test", // TODO how important is in that this matches config?
         "category" -> "handout", // TODO source from API
       )
-      gridApi.setUsageRights(imageId, newUsagesRights).isRight mustBe true
+      gridApi.setUsageRights(image.id, newUsagesRights).isRight mustBe true
     }
 
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
       val images = gridApi.getImages(q = Some("+syndicationStatus:unsuitable"))
       val imageIdsInSearchResponse = images.map(_.id)
-      imageIds.forall(imageIdsInSearchResponse.contains) mustBe true
+      images.map(_.id).forall(imageIdsInSearchResponse.contains) mustBe true
     }
   }
 
   it should "show non owned images with a syndication lease as unsuitable and not queued" in {
-    val imageIds = forNotOwnedButLeased.map { image =>
-      val imageUri = uploadImage(image)
-      val imageId = imageUri.split("/").last
-      imageId
+    val images = forNotOwnedButLeased.map { filename =>
+      uploadImage(filename)
     }
 
-    imageIds.foreach { imageId =>
+    images.foreach { image =>
       val newPhotographer = UUID.randomUUID().toString
       val newUsagesRights = Map(
         "publication" -> "Test", // TODO how important is in that this matches config?
         "category" -> "handout", // TODO source from API
         "photographer" -> newPhotographer
       )
-      gridApi.setUsageRights(imageId, newUsagesRights).isRight mustBe true
+      gridApi.setUsageRights(image.id, newUsagesRights).isRight mustBe true
     }
-    imageIds.foreach { imageId =>
-      gridApi.addSyndicationLease(imageId)
+    images.foreach { image =>
+      gridApi.addSyndicationLease(image.id)
     }
 
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
       val images = gridApi.getImages(q = Some("+syndicationStatus:unsuitable"))
       val imageIdsInSearchResponse = images.map(_.id)
-      imageIds.forall(imageIdsInSearchResponse.contains) mustBe true
+      images.map(_.id).forall(imageIdsInSearchResponse.contains) mustBe true
     }
 
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
       val images = gridApi.getImages(q = Some("+syndicationStatus:queued"))
       val imageIdsInSearchResponse = images.map(_.id)
-      imageIds.forall(imageIdsInSearchResponse.contains) mustBe false
+      images.map(_.id).forall(imageIdsInSearchResponse.contains) mustBe false
     }
   }
 }

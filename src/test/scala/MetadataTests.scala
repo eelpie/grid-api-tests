@@ -10,11 +10,9 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   "Metadata extraction" should
     "record file metadata" in {
-    val imageUri = uploadImage("IPTC-GoogleImgSrcPmd_testimg01.jpg")
-    val imageId = imageUri.split("/").last
-    val maybeImage = gridApi.getImage(imageId)
+    val image = uploadImage("IPTC-GoogleImgSrcPmd_testimg01.jpg")
 
-    val fileMetadata = gridApi.getFileMetadata(maybeImage.get).get
+    val fileMetadata = gridApi.getFileMetadata(image).get
 
     fileMetadata.colourModel mustBe Some("RGB")
     fileMetadata.iptc.get("Credit") mustBe "IPTC/Jane Photosty"
@@ -24,10 +22,9 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
   }
 
   it should "set initial image metadata from file metadata" in {
-    val imageUri = uploadImage("IPTC-GoogleImgSrcPmd_testimg01.jpg")
-    val imageId = imageUri.split("/").last
-    val maybeImage = gridApi.getImage(imageId)
+    val image = uploadImage("IPTC-GoogleImgSrcPmd_testimg01.jpg")
 
+    val maybeImage = gridApi.getImage(image.id)
     maybeImage.flatMap(_.metadata.title) mustBe Some("The railway and the cars")
     maybeImage.flatMap(_.metadata.description) mustBe Some("The railways of the S45 line are running very close to a small street with parking cars")
     maybeImage.flatMap(_.metadata.byline) mustBe Some("Jane Photosty")
@@ -35,8 +32,7 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
   }
 
   "Metadata editing" should "allow image metadata to be set" in {
-    val imageUri = uploadImage("poppies.tif")
-    val imageId = imageUri.split("/").last
+    val image = uploadImage("poppies.tif")
 
     val newTitle = UUID.randomUUID().toString
     val newDescription = UUID.randomUUID().toString
@@ -45,18 +41,17 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       "description" -> newDescription,
     )
 
-    gridApi.setMetadata(imageId, updatedMetadata)
+    gridApi.setMetadata(image.id, updatedMetadata)
 
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
-      val image = gridApi.getImage(imageId).get
-      image.metadata.title mustBe Some(newTitle)
-      image.metadata.description mustBe Some(newDescription)
+      val updatedImage = gridApi.getImage(image.id).get
+      updatedImage.metadata.title mustBe Some(newTitle)
+      updatedImage.metadata.description mustBe Some(newDescription)
     }
   }
 
   it should "allow rights and restrictions to be set for an image" in {
-    val imageUri = uploadImage("poppies.tif")
-    val imageId = imageUri.split("/").last
+    val image = uploadImage("poppies.tif")
 
     val newPhotographer = UUID.randomUUID().toString
 
@@ -66,13 +61,13 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       "photographer" -> newPhotographer
     )
 
-    val result = gridApi.setUsageRights(imageId, newUsagesRights)
+    val result = gridApi.setUsageRights(image.id, newUsagesRights)
 
     result.isRight mustBe true
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
-      val image = gridApi.getImage(imageId).get
-      image.usageRights.category mustBe Some("staff-photographer")
-      image.usageRights.photographer mustBe Some(newPhotographer)
+      val updatedImage = gridApi.getImage(image.id).get
+      updatedImage.usageRights.category mustBe Some("staff-photographer")
+      updatedImage.usageRights.photographer mustBe Some(newPhotographer)
     }
   }
 
