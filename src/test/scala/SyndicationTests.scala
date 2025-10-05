@@ -101,16 +101,14 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       gridApi.addSyndicationLease(image.id)
     }
 
+    val imageIdsUnderTest = images.map(_.id)
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
-      val images = gridApi.getImages(q = Some("+syndicationStatus:unsuitable"))
-      val imageIdsInSearchResponse = images.map(_.id)
-      images.map(_.id).forall(imageIdsInSearchResponse.contains) mustBe true
+      val imageIdsInSearchResponse = gridApi.getImages(q = Some("+syndicationStatus:unsuitable")).map(_.id)
+      imageIdsUnderTest.forall(imageIdsInSearchResponse.contains) mustBe true
     }
-
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
-      val images = gridApi.getImages(q = Some("+syndicationStatus:queued"))
-      val imageIdsInSearchResponse = images.map(_.id)
-      images.map(_.id).forall(imageIdsInSearchResponse.contains) mustBe false
+      val imageIdsInSearchResponse = gridApi.getImages(q = Some("+syndicationStatus:queued")).map(_.id)
+      imageIdsUnderTest.forall(imageIdsInSearchResponse.contains) mustBe false
     }
   }
 }
