@@ -16,7 +16,7 @@ class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     val cropRequest = CropRequest(
       source = gridApi.uriFor(image),
       x = 800,
-      y = 800,
+      y = 810,
       width = 3000,
       height = 2000,
       // TODO aspect ratio does what?
@@ -27,6 +27,10 @@ class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     result.isRight mustBe true
     val crop = result.right.get
     crop.id.nonEmpty mustBe true
+    crop.specification.bounds.x mustBe 800
+    crop.specification.bounds.y mustBe 810
+    crop.specification.bounds.width mustBe 3000
+    crop.specification.bounds.height mustBe 2000
   }
 
 }
