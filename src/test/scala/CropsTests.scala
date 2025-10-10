@@ -1,0 +1,32 @@
+import org.joda.time.DateTime
+import org.scalatest.concurrent.Eventually.eventually
+import org.scalatest.concurrent.Futures.{interval, timeout}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.time.{Millis, Seconds, Span}
+
+import java.util.UUID
+
+
+class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
+
+  "Crops API" should "crop an image and return crop" in {
+    val image = uploadImage("IMG_3939.JPG")
+    // TODO credit and description
+    val cropRequest = CropRequest(
+      source = gridApi.uriFor(image),
+      x = 800,
+      y = 800,
+      width = 3000,
+      height = 2000,
+      // TODO aspect ratio does what?
+    )
+
+    val result = gridApi.createCrop(cropRequest)
+
+    result.isRight mustBe true
+    val crop = result.right.get
+    crop.id.nonEmpty mustBe true
+  }
+
+}

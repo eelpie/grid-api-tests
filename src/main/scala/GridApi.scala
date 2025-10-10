@@ -27,6 +27,12 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     loadServiceIndexPage(mediaApiUrl)
   }
 
+  def uriFor(image: Image): String = {
+    val links: Seq[Link] = getServiceEndpoints.links
+    val imageLink = links.find(_.rel == "image").get
+    insertIdInto(imageLink.href, image.id)
+  }
+
   def getImageLoaderEndpoints: MediaApiResponse = {
     val loaderLink = getServiceEndpoints.links.find(_.rel == "loader").get
     loadServiceIndexPage(loaderLink.href)
@@ -40,6 +46,11 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   def getUsageEndpoints: MediaApiResponse = {
     val usageLink = getServiceEndpoints.links.find(_.rel == "usage").get
     loadServiceIndexPage(usageLink.href)
+  }
+
+  def getCropperEndpoints: MediaApiResponse = {
+    val cropperLink = getServiceEndpoints.links.find(_.rel == "cropper").get
+    loadServiceIndexPage(cropperLink.href)
   }
 
   def getMetadataEndpoints: MediaApiResponse = {
@@ -118,6 +129,22 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
       Right()
     } else {
       Left(response.body)
+    }
+  }
+
+  def createCrop(cropRequest: CropRequest): Either[Unit, Crop] = {
+    val cropLink = getCropperEndpoints.links.find(_.rel == "crop").get
+
+    val eventualResponse = wsClient.url(cropLink.href).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      post(Json.toJson(cropRequest))
+
+    val response = Await.result(eventualResponse, reasonableWait)
+    if (response.status == 200) {
+      println(response.body)
+      Right(Json.parse(response.body).as[Crop])
+    } else {
+      Left()
     }
   }
 
