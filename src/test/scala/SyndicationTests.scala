@@ -10,11 +10,12 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   private val testImagesSet = getFilesInFolder("syndication")
 
-  private val grouped = testImagesSet.grouped(2).toSeq
+  private val grouped = testImagesSet.grouped(1).toSeq
   private val forReview = grouped.head
   private val forQueued = grouped(1)
   private val forNotOwned = grouped(2)
   private val forNotOwnedButLeased = grouped(3)
+  private val forSent = grouped(4)
 
   "Syndication filter" should "include owned images in review view" in {
     val images = forReview.map { filename =>
@@ -110,5 +111,15 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       val imageIdsInSearchResponse = gridApi.getImages(q = Some("+syndicationStatus:queued")).map(_.id)
       imageIdsUnderTest.forall(imageIdsInSearchResponse.contains) mustBe false
     }
+  }
+
+  it should "mark as sent via the media api syndicate image end point" in {
+    val image = uploadImage(forSent.head)
+    // TODO lease
+    println(image.id)
+
+    gridApi.syndicate(image.id, "our-syndication-partner", "TODO")
+
+    // TODO assert what no title found means?
   }
 }

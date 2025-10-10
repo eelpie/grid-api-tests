@@ -5,7 +5,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.JsonBodyReadables.readableAsJson
 import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
-import play.api.libs.ws.{DefaultBodyWritables, StandaloneWSRequest}
+import play.api.libs.ws.{DefaultBodyWritables, EmptyBody, StandaloneWSRequest}
 
 import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 import scala.concurrent.{Await, Future}
@@ -183,6 +183,23 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     Await.result(eventualResponse, reasonableWait)
   }
 
+  def syndicate(id: String, partnerName: String, startPending: String): Unit = {
+    val syndicateImageLink = getServiceEndpoints.links.find(_.rel == "syndicate-image").get
+    val withImageId = insertIdInto(syndicateImageLink.href, id)
+    val withPartnerName = withImageId.replaceAll("""\{partnerName}""", partnerName)
+    val withStartPending = withPartnerName.replaceAll("""\{startPending}""", startPending)
+
+    println(withStartPending)
+
+    val eventualResponse = wsClient.url(withStartPending).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      post(EmptyBody)
+
+    val response = Await.result(eventualResponse, reasonableWait)
+    println(response.status)
+    println(response.body)
+  }
+
   def getImageLoaderLoadLink: String = {
     getImageLoaderEndpoints.links.find(_.rel == "load").get.href
   }
@@ -213,9 +230,9 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   def loadImage(image: Array[Byte]): Either[String, ImageUploadResponse] = {
     // TODO sync end point is not advertised?
     val prepareEndpoint = getImageLoaderLoadLink
-    val meh = prepareEndpoint.split("\\{").head
+    val endpoint = prepareEndpoint.split("\\{").head
 
-    val eventualResponse = wsClient.url(meh).
+    val eventualResponse = wsClient.url(endpoint).
       withHttpHeaders("X-Gu-Media-Key" -> apiKey).
       post(image)
 
