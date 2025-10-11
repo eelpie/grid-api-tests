@@ -1,16 +1,10 @@
-import org.joda.time.DateTime
-import org.scalatest.concurrent.Eventually.eventually
-import org.scalatest.concurrent.Futures.{interval, timeout}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
-import org.scalatest.time.{Millis, Seconds, Span}
-
-import java.util.UUID
 
 
 class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
-  "Crops API" should "crop an image and return crop" in {
+  "Crops API" should "crop an image and return crop details" in {
     val image = uploadImage("IMG_3939.JPG")
     // TODO credit and description
     val cropRequest = CropRequest(

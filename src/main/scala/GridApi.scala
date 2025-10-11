@@ -73,13 +73,26 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   }
 
   def getUsages(imageId: String): UsagesResponse = {
-    val url = getUsagesLink.replaceAll("\\{id}", imageId)
+    val url = getUsagesByMediaLink.replaceAll("\\{id}", imageId)
     val eventualResponse = authedGet(url)
     val response = Await.result(eventualResponse, reasonableWait)
+    // TODO return 404 rather than empty list when no usages!
     Json.parse(response.body).as[UsagesResponse]
   }
 
-  private def getUsagesLink: String = {
+  def deleteUsages(id: String): Unit = {
+    val uri = insertIdInto(getUsagesByIdLink, id)
+    val eventualResponse = wsClient.url(uri).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      delete()
+    Await.result(eventualResponse, reasonableWait)
+  }
+
+  private def getUsagesByIdLink: String = {
+    getUsageEndpoints.links.find(_.rel == "usages-by-media").map(_.href).get
+  }
+
+  private def getUsagesByMediaLink: String = {
     getUsageEndpoints.links.find(_.rel == "usages-by-media").map(_.href).get
   }
 
@@ -141,7 +154,6 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
 
     val response = Await.result(eventualResponse, reasonableWait)
     if (response.status == 200) {
-      println(response.body)
       Right(Json.parse(response.body).as[Crop])
     } else {
       Left()

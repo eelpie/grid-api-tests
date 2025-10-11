@@ -116,7 +116,6 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
   it should "mark as sent via the media api syndicate image end point" in {
     val image = uploadImage(forSent.head)
     // TODO lease
-    println(image.id)
 
     gridApi.syndicate(image.id, "our-syndication-partner", startPending = false)
 

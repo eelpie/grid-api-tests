@@ -59,3 +59,8 @@ case class UsagesResponse(length: Int, data: Seq[UsageResponseItem])
 object UsagesResponse {
   implicit val urr: Reads[UsagesResponse] = Json.reads[UsagesResponse]
 }
+
+case class ImageUsageField(uri: String, data: Seq[UsageResponseItem])
+object ImageUsageField {
+  implicit val iufr: Reads[ImageUsageField] = Json.reads[ImageUsageField]
+}

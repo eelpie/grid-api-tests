@@ -7,7 +7,7 @@ import org.scalatest.time.{Millis, Seconds, Span}
 
 class LeasesTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
-  "Leases API" should "allow a syndication leases to be added to an image" in {
+  "Leases API" should "allow a syndication lease to be added to an image" in {
     val image = uploadImage("poppies.tif")
 
     gridApi.addSyndicationLease(image.id)
