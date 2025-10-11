@@ -118,8 +118,16 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     // TODO lease
     println(image.id)
 
-    gridApi.syndicate(image.id, "our-syndication-partner", "TODO")
+    gridApi.syndicate(image.id, "our-syndication-partner", startPending = false)
 
-    // TODO assert what no title found means?
+    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+      val imageIdsInSearchResponse = gridApi.getImages(q = Some("+syndicationStatus:sent")).map(_.id)
+      imageIdsInSearchResponse.contains(image.id) mustBe true
+    }
+    val response = gridApi.getUsages(image.id)
+    val firstUsage = response.data.head.data
+    firstUsage.platform mustBe "syndication"
+    firstUsage.status mustBe "syndicated"
+    // TODO what does no title found mean in the UI?
   }
 }

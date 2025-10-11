@@ -165,6 +165,19 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     Await.result(eventualResponse, reasonableWait)
   }
 
+  def syndicate(id: String, partnerName: String, startPending: Boolean): Unit = {
+    val syndicateImageLink = getServiceEndpoints.links.find(_.rel == "syndicate-image").get
+    val withImageId = insertIdInto(syndicateImageLink.href, id)
+    val withPartnerName = withImageId.replaceAll("""\{partnerName}""", partnerName)
+    val withStartPending = withPartnerName.replaceAll("""\{startPending}""", startPending.toString)
+
+    val eventualResponse = wsClient.url(withStartPending).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      post(EmptyBody)
+
+    Await.result(eventualResponse, reasonableWait)
+  }
+
   def addSyndicationLease(imageId: String): Unit = {
     val leaseEndpoints: MediaApiResponse = getLeaseEndpoints
     val leasesLink = leaseEndpoints.links.find(_.rel == "leases").get
@@ -181,23 +194,6 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
       post(Json.toJson(leaseSubmission))
 
     Await.result(eventualResponse, reasonableWait)
-  }
-
-  def syndicate(id: String, partnerName: String, startPending: String): Unit = {
-    val syndicateImageLink = getServiceEndpoints.links.find(_.rel == "syndicate-image").get
-    val withImageId = insertIdInto(syndicateImageLink.href, id)
-    val withPartnerName = withImageId.replaceAll("""\{partnerName}""", partnerName)
-    val withStartPending = withPartnerName.replaceAll("""\{startPending}""", startPending)
-
-    println(withStartPending)
-
-    val eventualResponse = wsClient.url(withStartPending).
-      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
-      post(EmptyBody)
-
-    val response = Await.result(eventualResponse, reasonableWait)
-    println(response.status)
-    println(response.body)
   }
 
   def getImageLoaderLoadLink: String = {
