@@ -61,6 +61,11 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       val images = gridApi.getImages(q = Some("+syndicationStatus:queued"))
       val imageIdsInSearchResponse = images.map(_.id)
       images.map(_.id).forall(imageIdsInSearchResponse.contains) mustBe true
+      images.forall{ i =>
+        // TODO syndicationStatus field does not match the filter.
+        println(i.id + ": " + i.syndicationStatus)
+        i.syndicationStatus == "queued"
+      } mustBe true
     }
   }
 
@@ -127,6 +132,12 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     val firstUsage = response.data.head.data
     firstUsage.platform mustBe "syndication"
     firstUsage.status mustBe "syndicated"
+
+    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+      val sentImage = gridApi.getImage(image.id).get
+      sentImage.syndicationStatus mustBe "sent"
+    }
+
     // TODO what does no title found mean in the UI?
   }
 }
