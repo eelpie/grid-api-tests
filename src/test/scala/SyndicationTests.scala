@@ -21,15 +21,8 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     val images = forReview.map { filename =>
       uploadImage(filename)
     }
-
     images.foreach { image =>
-      val newPhotographer = UUID.randomUUID().toString
-      val newUsagesRights = Map(
-        "publication" -> "Test", // TODO how important is in that this matches config?
-        "category" -> "staff-photographer", // TODO source from API
-        "photographer" -> newPhotographer
-      )
-      gridApi.setUsageRights(image.id, newUsagesRights).isRight mustBe true
+      setOwnedUsageRights(image)
     }
 
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
@@ -43,16 +36,7 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     val images = forQueued.map { filename =>
       uploadImage(filename)
     }
-
-    images.foreach { image =>
-      val newPhotographer = UUID.randomUUID().toString
-      val newUsagesRights = Map(
-        "publication" -> "Test", // TODO how important is in that this matches config?
-        "category" -> "staff-photographer", // TODO source from API
-        "photographer" -> newPhotographer
-      )
-      gridApi.setUsageRights(image.id, newUsagesRights).isRight mustBe true
-    }
+    images.foreach(setOwnedUsageRights)
     images.foreach { image =>
       gridApi.addSyndicationLease(image.id)
     }
@@ -67,7 +51,7 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   it should "show non owned images as unsuitable" in {
     val images = forNotOwned.map { filename =>
-     uploadImage(filename)
+      uploadImage(filename)
     }
 
     images.foreach { image =>
@@ -120,11 +104,18 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   it should "mark as sent via the media api syndicate image end point" in {
     val image = uploadImage(forSent.head)
-    // TODO lease
+    purgeUsages(image)
+    setOwnedUsageRights(image)
+    gridApi.addSyndicationLease(image.id)
+    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+      gridApi.getImage(image.id).get.syndicationStatus mustBe "queued"
+    }
+
+    // TODO edge case of something which was sent even through it was unsuitable?
 
     gridApi.syndicate(image.id, "our-syndication-partner", startPending = false)
 
-    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+    eventually(timeout(Span(10, Seconds)), interval(Span(100, Millis))) {
       val imageIdsInSearchResponse = gridApi.getImages(q = Some("+syndicationStatus:sent")).map(_.id)
       imageIdsInSearchResponse.contains(image.id) mustBe true
     }
@@ -140,4 +131,23 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
     // TODO what does no title found mean in the UI?
   }
+
+  private def purgeUsages(image: Image) = {
+    gridApi.deleteUsages(image.id)
+    eventually(timeout(Span(10, Seconds)), interval(Span(100, Millis))) {
+      val usages = gridApi.getImage(image.id).get.usages
+      usages.data.isEmpty mustBe true
+    }
+  }
+
+  private def setOwnedUsageRights(image: Image) = {
+    val newPhotographer = UUID.randomUUID().toString
+    val newUsagesRights = Map(
+      "publication" -> "Test", // TODO how important is in that this matches config?
+      "category" -> "staff-photographer", // TODO source from API
+      "photographer" -> newPhotographer
+    )
+    gridApi.setUsageRights(image.id, newUsagesRights).isRight mustBe true
+  }
+
 }
