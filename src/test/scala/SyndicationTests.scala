@@ -83,6 +83,10 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       val imageIdsInSearchResponse = images.map(_.id)
       images.map(_.id).forall(imageIdsInSearchResponse.contains) mustBe true
     }
+    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+      val imagesInSearchResponse = gridApi.getImages(q = Some("+syndicationStatus:unsuitable"))
+      imagesInSearchResponse.forall(_.syndicationStatus == "unsuitable") mustBe true
+    }
   }
 
   it should "show non owned images with a syndication lease as unsuitable and not queued" in {
