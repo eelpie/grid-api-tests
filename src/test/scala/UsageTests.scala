@@ -31,7 +31,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       val usages = gridApi.getImage(image.id).get.usages
       usages.data.nonEmpty mustBe true
     }
-    val usages = gridApi.getUsages(image.id).data.map(_.data)
+    val usages = gridApi.getUsages(image.id).get.data.map(_.data)
     usages.find(usage => usage.platform == "print" && usage.dateAdded == dateAdded && usage.status == "published")
   }
 
@@ -50,7 +50,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     gridApi.addSyndicationUsage(usagesSubmission)
 
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
-      val usages = gridApi.getUsages(image.id).data.map(_.data)
+      val usages = gridApi.getUsages(image.id).get.data.map(_.data)
       val addedUsage = usages.find(usage => usage.platform == "syndication" && usage.dateAdded == dateAdded)
       addedUsage.nonEmpty mustBe true
     }

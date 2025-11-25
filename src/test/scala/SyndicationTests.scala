@@ -119,8 +119,13 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       val imageIdsInSearchResponse = gridApi.getImages(q = Some("+syndicationStatus:sent")).map(_.id)
       imageIdsInSearchResponse.contains(image.id) mustBe true
     }
-    val response = gridApi.getUsages(image.id)
-    val firstUsage = response.data.head.data
+
+    def maybeResponse = gridApi.getUsages(image.id)
+    def maybeFirstUsage = maybeResponse.map(_.data.head.data)
+    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+      maybeFirstUsage.nonEmpty mustBe true
+    }
+    val firstUsage = maybeFirstUsage.get
     firstUsage.platform mustBe "syndication"
     firstUsage.status mustBe "syndicated"
 
@@ -131,6 +136,10 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
     // TODO what does no title found mean in the UI?
   }
+
+  // TODO it should "remove images marked as blocked from the review list" in {
+  //  fail()
+  //}
 
   private def purgeUsages(image: Image) = {
     gridApi.deleteUsages(image.id)
