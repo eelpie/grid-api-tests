@@ -8,6 +8,8 @@ import java.security.MessageDigest
 
 class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
 
+  private val imageForAsyncUpload = "IMG_3938.JPG"
+
   "Image loader async end point" should
     "prepare pre signed upload URLs for media ids and set upload status to prepared" in {
     val mediaId = "123"
@@ -21,7 +23,7 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
   }
 
   it should "ingest images PUT to pre signed upload URLs" in {
-    val filename = "IMG_3938.JPG"
+    val filename = imageForAsyncUpload
     val image = getClass.getResourceAsStream(filename).readAllBytes()
     val mediaId = digestFor(image)
 
@@ -39,7 +41,7 @@ class ImageLoaderTests extends AnyFlatSpec with GridUnderTest {
   }
 
   it should "eventually report completed upload status" in {
-    val filename = "IMG_3938.JPG"
+    val filename = imageForAsyncUpload
     val image = getClass.getResourceAsStream(filename).readAllBytes()
     val mediaId = digestFor(image)
 
