@@ -258,10 +258,9 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
 
   def putImage(uploadURL: String, mediaId: String, image: Array[Byte]) = {
     val eventualResponse = wsClient.url(uploadURL).
-      withHttpHeaders("host" -> "eelpie-grid-ingest.s3.eu-west-1.amazonaws.com",
-        "x-amz-meta-media-id" -> mediaId
-      ).
-      put(image)
+      withHttpHeaders(
+        "x-amz-meta-media-id" -> mediaId,
+      ).put(image)
     val response = Await.result(eventualResponse, reasonableWait)
     response
   }
