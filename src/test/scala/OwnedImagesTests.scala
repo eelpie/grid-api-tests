@@ -65,9 +65,11 @@ class OwnedImagesTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
     images.foreach { image =>
       val newPhotographer = UUID.randomUUID().toString
+      val contractPhotographerUsageRight = gridApi.getUsageRightsCategories().right.get.find(_.name == "Photographer - contract").get
+
       val newUsagesRights = Map(
         "publication" -> "Test", // TODO how important is in that this matches config?
-        "category" -> "contract-photographer", // TODO source from API
+        "category" -> contractPhotographerUsageRight.value,
         "photographer" -> newPhotographer
       )
       gridApi.setUsageRights(image.id, newUsagesRights).isRight mustBe true
@@ -106,3 +108,4 @@ class OwnedImagesTests extends AnyFlatSpec with GridUnderTest with Fixtures {
   }
 
 }
+

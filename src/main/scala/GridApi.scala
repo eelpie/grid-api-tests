@@ -116,6 +116,10 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     getMetadataEndpoints.links.find(_.rel == "usageRights").map(_.href).get
   }
 
+  private def getUsageRightsCategoriesLink: String = {
+    getMetadataEndpoints.links.find(_.rel == "usage-rights-list").map(_.href).get
+  }
+
   def setMetadata(imageId: String, updatedMetadata: Map[String, String]): Unit = {
     val url = insertIdInto(getMetadataLink, imageId)
 
@@ -128,6 +132,21 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
       put(Json.toJson(data))
 
     Await.result(eventualResponse, reasonableWait)
+  }
+
+  def getUsageRightsCategories(): Either[String, Seq[UsageRightsCategory]] = {
+    val url = getUsageRightsCategoriesLink
+
+    val eventualResponse = wsClient.url(url).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      get()
+
+    val response = Await.result(eventualResponse, reasonableWait)
+    if (response.status == 200) {
+      Right(Json.parse(response.body).as[UsageRightsCategoriesResponse].data)
+    } else {
+      Left(response.body)
+    }
   }
 
   def setUsageRights(imageId: String, newUsagesRights: Map[String, String]): Either[String, Unit] = {
