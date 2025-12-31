@@ -11,7 +11,8 @@ case class Crop(
                  id: String,
                  author: String,
                  date: DateTime,
-                 specification: CropSpecification
+                 specification: CropSpecification,
+                 assets: Seq[Asset]
                  // TODO all fields
                )
 
@@ -32,6 +33,13 @@ case class CropSpecification(uri: String, bounds: CropBounds)
 
 object CropSpecification {
   implicit val cpr: Reads[CropSpecification] = Json.reads[CropSpecification]
+}
+
+
+case class Asset(mimeType: String)
+
+object Asset {
+  implicit val ar: Reads[Asset] = Json.reads[Asset]
 }
 
 /*

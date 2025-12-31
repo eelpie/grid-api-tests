@@ -25,6 +25,12 @@ class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     crop.specification.bounds.y mustBe 810
     crop.specification.bounds.width mustBe 3000
     crop.specification.bounds.height mustBe 2000
+
+    crop.assets.head.mimeType mustBe "image/jpeg"
+  }
+
+  it should "crop graphics to PNG format" in {
+    // TODO implement me
   }
 
 }
