@@ -168,7 +168,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     }
   }
 
-  def createCrop(cropRequest: CropRequest): Either[Unit, Crop] = {
+  def createCrop(cropRequest: CropRequest): Either[String, Crop] = {
     val cropLink = getCropperEndpoints.links.find(_.rel == "crop").get
 
     val eventualResponse = wsClient.url(cropLink.href).
@@ -179,7 +179,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     if (response.status == 200) {
       Right(Json.parse(response.body).as[Crop])
     } else {
-      Left()
+      Left(response.body)
     }
   }
 

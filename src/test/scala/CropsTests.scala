@@ -30,7 +30,25 @@ class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
   }
 
   it should "crop graphics to PNG format" in {
-    // TODO implement me
+    val image = uploadImage("basn3p08.png")
+    val cropRequest = CropRequest(
+      source = gridApi.uriFor(image),
+      x = 1,
+      y = 1,
+      width = 30,
+      height = 30
+    )
+    val updatedMetadata = Map(
+      "credit" -> "schaik.com pngsuite",
+      "description" -> "Indexed PNG which should be identified as a graphic"
+    )
+    gridApi.setMetadata(image.id, updatedMetadata)
+
+    val result = gridApi.createCrop(cropRequest)
+
+    result.isRight mustBe true
+    val crop = result.right.get
+    crop.assets.head.mimeType mustBe "image/png"
   }
 
 }
