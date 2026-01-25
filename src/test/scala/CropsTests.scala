@@ -68,7 +68,7 @@ class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
     val metadata = ImageMetadataReader.readMetadata(inputStream)
     val directory = metadata.getFirstDirectoryOfType(classOf[ExifIFD0Directory])
-    val maybeOrientation = if (directory.containsTag(ExifDirectoryBase.TAG_ORIENTATION)) {
+    val maybeOrientation = if (directory != null && directory.containsTag(ExifDirectoryBase.TAG_ORIENTATION)) {
       Some(directory.getInteger(ExifDirectoryBase.TAG_ORIENTATION))
     } else {
       None
