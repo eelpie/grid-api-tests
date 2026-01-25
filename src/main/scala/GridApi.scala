@@ -1,5 +1,6 @@
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.{Materializer, SystemMaterializer}
+import org.apache.pekko.util.ByteString
 import org.joda.time.DateTime
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.JsonBodyReadables.readableAsJson
@@ -8,7 +9,7 @@ import play.api.libs.ws.ahc.StandaloneAhcWSClient
 import play.api.libs.ws.{DefaultBodyWritables, EmptyBody, StandaloneWSRequest}
 
 import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables {
 
@@ -21,6 +22,16 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     }
     implicit val materializer: Materializer = SystemMaterializer(system).materializer
     StandaloneAhcWSClient()
+  }
+
+  def get(url: String)(implicit ec: ExecutionContext): Future[Option[ByteString]] = {
+    wsClient.url(url).get.map { r =>
+      if (r.status == 200) {
+        Some(r.bodyAsBytes)
+      } else {
+        None
+      }
+    }
   }
 
   def getServiceEndpoints: MediaApiResponse = {

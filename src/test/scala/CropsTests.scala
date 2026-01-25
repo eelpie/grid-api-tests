@@ -1,12 +1,22 @@
+import com.drew.imaging.ImageMetadataReader
+import com.drew.metadata.Tag
+import com.drew.metadata.exif.{ExifDirectoryBase, ExifIFD0Directory, ExifSubIFDDirectory}
+import org.apache.pekko.util.ByteString
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
+import org.scalatest.matchers.must.Matchers.{convertToAnyMustWrapper, not}
+
+import java.io.ByteArrayInputStream
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.{Duration, SECONDS}
+import scala.jdk.CollectionConverters.IterableHasAsScala
 
 
 class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   "Crops API" should "crop an image and return crop details" in {
     val image = uploadImage("IMG_3939.JPG")
-    // TODO credit and description
+    // TODO set credit and description
     val cropRequest = CropRequest(
       source = gridApi.uriFor(image),
       x = 800,
@@ -27,6 +37,43 @@ class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     crop.specification.bounds.height mustBe 2000
 
     crop.assets.head.mimeType mustBe "image/jpeg"
+  }
+
+  it should "strip used exif orientation from crops which have already been correctly oriented" in {
+    val exifOrientedImage = uploadImage("crops/IMG_5380.JPG")
+    // TODO set credit and description
+
+    val cropRequest = CropRequest(
+      source = gridApi.uriFor(exifOrientedImage),
+      x = 100,
+      y = 1200,
+      width = 3000,
+      height = 3400,
+    )
+
+    val result = gridApi.createCrop(cropRequest)
+    result.isRight mustBe true
+    val crop = result.right.get
+
+    // Confirm that the expected crop asset is visible with the expected vertical dimensions
+    val maybeAsset = crop.assets.find(_.dimensions.height == 1000)
+
+    val assertUrl = maybeAsset.get.file
+
+    // Download this file for inspection
+    val maybeAssetBytes: Option[ByteString] = Await.result(gridApi.get(assertUrl), Duration(10, SECONDS))
+
+    val assetBytes = maybeAssetBytes.get
+    val inputStream = new ByteArrayInputStream(assetBytes.toArray)
+
+    val metadata = ImageMetadataReader.readMetadata(inputStream)
+    val directory = metadata.getFirstDirectoryOfType(classOf[ExifIFD0Directory])
+    val maybeOrientation = if (directory.containsTag(ExifDirectoryBase.TAG_ORIENTATION)) {
+      Some(directory.getInteger(ExifDirectoryBase.TAG_ORIENTATION))
+    } else {
+      None
+    }
+    maybeOrientation must not be Some(6)
   }
 
   it should "crop graphics to PNG format" in {

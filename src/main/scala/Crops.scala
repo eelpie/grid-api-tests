@@ -35,8 +35,12 @@ object CropSpecification {
   implicit val cpr: Reads[CropSpecification] = Json.reads[CropSpecification]
 }
 
+case class Dimensions(width: Int, height: Int)
+object Dimensions {
+  implicit val cpr: Reads[Dimensions] = Json.reads[Dimensions]
+}
 
-case class Asset(mimeType: String)
+case class Asset(file: String, mimeType: String, dimensions: Dimensions)
 
 object Asset {
   implicit val ar: Reads[Asset] = Json.reads[Asset]

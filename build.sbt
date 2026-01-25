@@ -13,6 +13,7 @@ lazy val root = project
     libraryDependencies += "org.playframework" %% "play-ws-standalone-json" % playWsStandaloneVersion,
     libraryDependencies += "com.typesafe.play" %% "play-json-joda" % "2.9.1",
     libraryDependencies += "joda-time" % "joda-time" % "2.14.0",
+    libraryDependencies += "com.drewnoakes" % "metadata-extractor" % "2.19.0",
 
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
   )
