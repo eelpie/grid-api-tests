@@ -54,6 +54,11 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     loadServiceIndexPage(leaseLink.href)
   }
 
+  def getCollectionsEndpoints: MediaApiResponse = {
+    val collectionsLink = getServiceEndpoints.links.find(_.rel == "collections").get
+    loadServiceIndexPage(collectionsLink.href)
+  }
+
   def getUsageEndpoints: MediaApiResponse = {
     val usageLink = getServiceEndpoints.links.find(_.rel == "usage").get
     loadServiceIndexPage(usageLink.href)
@@ -81,6 +86,15 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     } else {
       Left()
     }
+  }
+
+  def getCollections()(implicit ec: ExecutionContext) = {
+    val links: MediaApiResponse = getCollectionsEndpoints
+    val collectionsLink = links.links.find(_.rel == "collections").get
+    println(collectionsLink)
+
+    val response = Await.result(authedGet(collectionsLink.href), reasonableWait)
+    println(response.body)
   }
 
   def getUsages(imageId: String): Option[UsagesResponse] = {
