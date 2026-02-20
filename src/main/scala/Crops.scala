@@ -1,7 +1,7 @@
 import org.joda.time.DateTime
 import play.api.libs.json.{JodaReads, Json, Reads}
 
-case class CropRequest(`type`: String = "crop", source: String, x: Int, y: Int, width: Int, height: Int)
+case class CropRequest(`type`: String = "crop", source: String, x: Int, y: Int, width: Int, height: Int, aspectRatio: Option[String] = None)
 
 object CropRequest {
   implicit val crr = Json.writes[CropRequest]

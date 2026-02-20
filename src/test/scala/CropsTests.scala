@@ -1,15 +1,15 @@
 import com.drew.imaging.ImageMetadataReader
-import com.drew.metadata.Tag
-import com.drew.metadata.exif.{ExifDirectoryBase, ExifIFD0Directory, ExifSubIFDDirectory}
+import com.drew.metadata.exif.{ExifDirectoryBase, ExifIFD0Directory}
 import org.apache.pekko.util.ByteString
+import org.joda.time
+import org.joda.time.DateTime
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.{convertToAnyMustWrapper, not}
 
 import java.io.ByteArrayInputStream
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{Duration, SECONDS}
-import scala.jdk.CollectionConverters.IterableHasAsScala
+import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 
 
 class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
@@ -39,7 +39,7 @@ class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     crop.assets.head.mimeType mustBe "image/jpeg"
   }
 
-  it should "strip used exif orientation from crops which have already been correctly oriented" in {
+  it should "strip used exif orientation from crop assets which have already been correctly oriented" in {
     val exifOrientedImage = uploadImage("crops/IMG_5380.JPG")
     // TODO set credit and description
 
@@ -98,4 +98,27 @@ class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     crop.assets.head.mimeType mustBe "image/png"
   }
 
+  it should "allow download of crop assets via the media API download crop end point" in {
+    // If canDownloadCrop config is set
+    val imageToCrop = uploadImage("crops/IMG_5380.JPG")
+    // TODO set credit and description
+
+    val cropRequest = CropRequest(
+      source = gridApi.uriFor(imageToCrop),
+      x = 100,
+      y = 1200,
+      width = 3000,
+      height = 3400,
+    )
+
+    val result = gridApi.createCrop(cropRequest)
+    result.isRight mustBe true
+    val crop = result.right.get
+    val cropId = crop.id
+
+    // Discover the download via media api
+    val imageCropLinks = gridApi.getImageCropEndpoints(imageToCrop.id).links
+    val cropLinkToDownload = imageCropLinks.find(_.rel == "crop-download-" + cropId + "-441")
+    fail()
+  }
 }

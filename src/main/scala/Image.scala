@@ -18,7 +18,12 @@ object URILink {
   implicit val lr: Reads[URILink] = Json.reads[URILink]
 }
 
-case class Image(id: String, metadata: Metadata, usageRights: UsageRights, fileMetadata: URILink, usages: ImageUsageField, syndicationStatus: String)
+case class Source(file: String, size: Long, mimeType: String, dimensions: Dimensions)
+object Source {
+  implicit val sr: Reads[Source] = Json.reads[Source]
+}
+
+case class Image(id: String, metadata: Metadata, usageRights: UsageRights, fileMetadata: URILink, usages: ImageUsageField, syndicationStatus: String, source: Source, exports: Seq[Crop])
 
 object Image {
   implicit val ir: Reads[Image] = Json.reads[Image]

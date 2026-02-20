@@ -54,6 +54,14 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     loadServiceIndexPage(leaseLink.href)
   }
 
+  def getImageCropEndpoints(imageId: String): MediaApiResponse = {
+    val croppedImageLinks = getImageLinks(imageId).get
+    println(croppedImageLinks)
+    val cropsLink: Link = croppedImageLinks.find(_.rel == "crops").get
+
+    loadServiceIndexPage(cropsLink.href)
+  }
+
   def getCollectionsEndpoints: MediaApiResponse = {
     val collectionsLink = getServiceEndpoints.links.find(_.rel == "collections").get
     loadServiceIndexPage(collectionsLink.href)
@@ -320,6 +328,19 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     if (response.status == 200) {
       val data = Json.parse(response.body) \ "data"
       Some(data.as[Image])
+    } else {
+      None
+    }
+  }
+
+  def getImageLinks(imageId: String): Option[Seq[Link]] = {
+    val imageLink = getServiceEndpoints.links.find(_.rel == "image").get.href
+    val url = insertIdInto(imageLink, imageId)
+    val eventualResponse = authedGet(url)
+    val response = Await.result(eventualResponse, reasonableWait)
+    if (response.status == 200) {
+      val data = Json.parse(response.body) \ "links"
+      Some(data.as[Seq[Link]])
     } else {
       None
     }
