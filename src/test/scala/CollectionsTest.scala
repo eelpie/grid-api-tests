@@ -6,22 +6,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class CollectionsTest extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   "Collections API" should "load the root node" in {
+    val collections = gridApi.getCollections()
 
-    gridApi.getCollections()
-
-
-
-    /*
-    https://apitest2.griddev.eelpieconsulting.co.uk/collections/collections/Home
-
-    {data: "test1"}
-    data
-      :
-      "test1"
-
-    */  1 mustBe 2
-
-
+    val rootNode = collections.get.data
+    rootNode.basename mustBe "root"
   }
 
 }

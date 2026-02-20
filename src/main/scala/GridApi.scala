@@ -88,13 +88,16 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     }
   }
 
-  def getCollections()(implicit ec: ExecutionContext) = {
-    val links: MediaApiResponse = getCollectionsEndpoints
+  def getCollections()(implicit ec: ExecutionContext): Option[CollectionsResponse] = {
+    val links = getCollectionsEndpoints
     val collectionsLink = links.links.find(_.rel == "collections").get
-    println(collectionsLink)
 
     val response = Await.result(authedGet(collectionsLink.href), reasonableWait)
-    println(response.body)
+    if (response.status == 200) {
+      Some(Json.parse(response.body).as[CollectionsResponse])
+    } else {
+      None
+    }
   }
 
   def getUsages(imageId: String): Option[UsagesResponse] = {
