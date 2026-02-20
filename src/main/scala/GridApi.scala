@@ -390,7 +390,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   }
 
 
-  private def authedGet(uri: String): Future[StandaloneWSRequest#Self#Response] = {
+  def authedGet(uri: String): Future[StandaloneWSRequest#Self#Response] = {
     wsClient.url(uri).
       withHttpHeaders("X-Gu-Media-Key" -> apiKey).
       get()

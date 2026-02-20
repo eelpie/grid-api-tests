@@ -119,6 +119,12 @@ class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     // Discover the download via media api
     val imageCropLinks = gridApi.getImageCropEndpoints(imageToCrop.id).links
     val cropLinkToDownload = imageCropLinks.find(_.rel == "crop-download-" + cropId + "-441")
-    fail()
+
+    // Download this file for inspection
+    val download = gridApi.authedGet(cropLinkToDownload.get.href) // TODO push back to private to GridAPI
+    val downloadResult = Await.result(download, Duration(10, SECONDS))
+    downloadResult.status mustBe 200
+    val assetBytes = downloadResult.bodyAsBytes
+    assetBytes.size mustBe 52299 // TODO cross check with api response
   }
 }
