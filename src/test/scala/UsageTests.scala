@@ -43,7 +43,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     val usageId = UUID.randomUUID().toString
     val dateAdded = DateTime.now
     val webUrl = "http://localhost/" + UUID.randomUUID().toString
-    val title = Some(UUID.randomUUID().toString)
+    val title = None
     val sectionId = None
     val digitalMediaUsageSubmission = exampleDigitalMediaUsage(image, usageId, dateAdded, webUrl, title, sectionId)
 
