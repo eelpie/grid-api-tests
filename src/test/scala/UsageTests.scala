@@ -16,6 +16,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
   private val forPrint = grouped.head
   private val forSyndication = grouped(1)
   private val forDelete = grouped(2)
+  private val forDigital = grouped(3)
 
   "Usages API" should "allow print usages to be added to an image" in {
     val image = uploadImage(forPrint.head)
@@ -33,6 +34,22 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     }
     val usages = gridApi.getUsages(image.id).get.data.map(_.data)
     usages.find(usage => usage.platform == "print" && usage.dateAdded == dateAdded && usage.status == "published")
+  }
+
+  it should "allow digital media usages to be added to an image" in {
+    val image = uploadImage(forDigital.head)
+    purgeUsages(image)
+
+    val usageId = UUID.randomUUID().toString
+    val dateAdded = DateTime.now
+
+    val webUrl = "http://localhost/" + UUID.randomUUID().toString
+    val title = UUID.randomUUID().toString
+    val sectionId = "TODO"
+
+    val digitalMediaUsageSubmission = exampleDigitalMediaUsage(image, usageId, dateAdded, webUrl, title, sectionId)
+
+    gridApi.addDigitalMediaUsage(digitalMediaUsageSubmission)
   }
 
   it should "allow syndication usages to be added to an image" in {
@@ -97,6 +114,23 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
         )
       )
     )
+  }
+
+  private def exampleDigitalMediaUsage(image: Image, usageId: String, dateAdded: DateTime, webUrl: String, title: String, sectionId: String) = {
+    DigitalMediaUsageSubmission(
+      digitalMediaUsageRecords = Seq(
+        DigitalMediaUsage(
+          mediaId = image.id,
+          dateAdded = dateAdded,
+          usageId = usageId,
+          digitalUsageMetadata = DigitalMediaUsageMetadata(
+            webUrl = webUrl,
+            webTitle = title,
+            sectionId = sectionId
+
+          )
+        )
+      ))
   }
 
   private def purgeUsages(image: Image) = {
