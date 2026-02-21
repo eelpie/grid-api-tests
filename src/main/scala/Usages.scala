@@ -25,11 +25,11 @@ object PrintUsage {
   implicit val puw: OFormat[PrintUsage] = Json.format[PrintUsage]
 }
 
-case class DigitalMediaUsageMetadata(webUrl: String, webTitle: Option[String], sectionId: Option[String])
-object DigitalMediaUsageMetadata {
-  implicit val dmumf: OFormat[DigitalMediaUsageMetadata] = Json.format[DigitalMediaUsageMetadata]
+case class DigitalUsageMetadata(webUrl: String, webTitle: Option[String], sectionId: Option[String])
+object DigitalUsageMetadata {
+  implicit val dmumf: OFormat[DigitalUsageMetadata] = Json.format[DigitalUsageMetadata]
 }
-case class DigitalMediaUsage(mediaId: String, dateAdded: DateTime, usageId: String, metadata: DigitalMediaUsageMetadata)
+case class DigitalMediaUsage(mediaId: String, dateAdded: DateTime, usageId: String, metadata: DigitalUsageMetadata)
 object DigitalMediaUsage {
   import JodaWrites._
   import JodaReads._
@@ -61,7 +61,7 @@ object SyndicationUsageRequest {
   implicit val surf: OFormat[SyndicationUsageRequest] = Json.format[SyndicationUsageRequest]
 }
 
-case class Usage(id: String, platform: String, status: String, dateAdded: DateTime)
+case class Usage(id: String, platform: String, status: String, dateAdded: DateTime, digitalUsageMetadata: Option[DigitalUsageMetadata])
 object Usage {
   import JodaReads._
   implicit val ur: Reads[Usage] = Json.reads[Usage]

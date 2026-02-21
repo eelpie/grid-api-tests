@@ -49,7 +49,6 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
     val result = gridApi.addDigitalMediaUsage(digitalMediaUsageSubmission)
 
-    println(result)
     result.isRight mustBe true
     eventually(timeout(Span(10, Seconds)), interval(Span(100, Millis))) {
       val usages = gridApi.getImage(image.id).get.usages
@@ -57,8 +56,8 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     }
     val usages = gridApi.getUsages(image.id).get.data.map(_.data)
     usages.exists(usage => usage.platform == "digital" && usage.dateAdded == dateAdded && usage.status == "published") mustBe true
+    usages.head.digitalUsageMetadata.map(_.webUrl) mustBe Some(webUrl)
   }
-
 
   it should "allow syndication usages to be added to an image" in {
     val image = uploadImage(forSyndication.head)
@@ -131,11 +130,10 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
           mediaId = image.id,
           dateAdded = dateAdded,
           usageId = usageId,
-          metadata = DigitalMediaUsageMetadata(
+          metadata = DigitalUsageMetadata(
             webUrl = webUrl,
             webTitle = title,
             sectionId = sectionId
-
           )
         )
       ))
