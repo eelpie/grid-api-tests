@@ -129,7 +129,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
           mediaId = image.id,
           dateAdded = dateAdded,
           usageId = usageId,
-          digitalUsageMetadata = DigitalMediaUsageMetadata(
+          metadata = DigitalMediaUsageMetadata(
             webUrl = webUrl,
             webTitle = title,
             sectionId = sectionId

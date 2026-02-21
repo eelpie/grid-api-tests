@@ -29,7 +29,7 @@ case class DigitalMediaUsageMetadata(webUrl: String, webTitle: String, sectionId
 object DigitalMediaUsageMetadata {
   implicit val dmumf: OFormat[DigitalMediaUsageMetadata] = Json.format[DigitalMediaUsageMetadata]
 }
-case class DigitalMediaUsage(mediaId: String, dateAdded: DateTime, usageId: String, digitalUsageMetadata: DigitalMediaUsageMetadata)
+case class DigitalMediaUsage(mediaId: String, dateAdded: DateTime, usageId: String, metadata: DigitalMediaUsageMetadata)
 object DigitalMediaUsage {
   import JodaWrites._
   import JodaReads._
