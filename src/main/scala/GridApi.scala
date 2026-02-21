@@ -136,8 +136,8 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     getUsageEndpoints.links.find(_.rel == "usages-by-media").map(_.href).get
   }
 
-  private def getDigitalMediaUsageAction: String = {
-    getUsagePrintUsageAction.replaceAll("print", "digital") // TODO
+  private def getDigitalUsageAction: String = {
+    getUsageEndpoints.actions.flatMap(_.find(_.name == "digital-usage").map(_.href)).get
   }
 
   private def getUsagePrintUsageAction: String = {
@@ -232,19 +232,12 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   }
 
   def addDigitalMediaUsage(digitalMediaUsageSubmission: DigitalMediaUsageSubmission): Unit = {
-    val v = Json.toJson(digitalMediaUsageSubmission)
-    println(Json.prettyPrint(v))
-
-    val eventualResponse = wsClient.url(getDigitalMediaUsageAction).
+    val eventualResponse = wsClient.url(getDigitalUsageAction).
       withHttpHeaders("X-Gu-Media-Key" -> apiKey).
       post(Json.toJson(digitalMediaUsageSubmission))
 
-    val response = Await.result(eventualResponse, reasonableWait)
-    println(response.status)
-    println(response.body)
+    Await.result(eventualResponse, reasonableWait)
   }
-
-
 
   def addSyndicationUsage(syndicationUsageSubmission: SyndicationUsageSubmission): Unit = {
     val action = getUsageSyndicationUsageAction
