@@ -43,12 +43,14 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     val usageId = UUID.randomUUID().toString
     val dateAdded = DateTime.now
     val webUrl = "http://localhost/" + UUID.randomUUID().toString
-    val title = UUID.randomUUID().toString
-    val sectionId = "TODO"
+    val title = Some(UUID.randomUUID().toString)
+    val sectionId = None
     val digitalMediaUsageSubmission = exampleDigitalMediaUsage(image, usageId, dateAdded, webUrl, title, sectionId)
 
-    gridApi.addDigitalMediaUsage(digitalMediaUsageSubmission)
+    val result = gridApi.addDigitalMediaUsage(digitalMediaUsageSubmission)
 
+    println(result)
+    result.isRight mustBe true
     eventually(timeout(Span(10, Seconds)), interval(Span(100, Millis))) {
       val usages = gridApi.getImage(image.id).get.usages
       usages.data.nonEmpty mustBe true
@@ -122,7 +124,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     )
   }
 
-  private def exampleDigitalMediaUsage(image: Image, usageId: String, dateAdded: DateTime, webUrl: String, title: String, sectionId: String) = {
+  private def exampleDigitalMediaUsage(image: Image, usageId: String, dateAdded: DateTime, webUrl: String, title: Option[String], sectionId: Option[String]) = {
     DigitalMediaUsageSubmission(
       digitalMediaUsageRecords = Seq(
         DigitalMediaUsage(

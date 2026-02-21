@@ -231,12 +231,17 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     Await.result(eventualResponse, reasonableWait)
   }
 
-  def addDigitalMediaUsage(digitalMediaUsageSubmission: DigitalMediaUsageSubmission): Unit = {
+  def addDigitalMediaUsage(digitalMediaUsageSubmission: DigitalMediaUsageSubmission): Either[String,  Unit] = {
     val eventualResponse = wsClient.url(getDigitalUsageAction).
       withHttpHeaders("X-Gu-Media-Key" -> apiKey).
       post(Json.toJson(digitalMediaUsageSubmission))
 
-    Await.result(eventualResponse, reasonableWait)
+   val result = Await.result(eventualResponse, reasonableWait)
+    if (result.status != 202) {
+      Left(result.body)
+    } else {
+      Right(())
+    }
   }
 
   def addSyndicationUsage(syndicationUsageSubmission: SyndicationUsageSubmission): Unit = {

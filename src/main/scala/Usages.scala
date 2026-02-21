@@ -25,7 +25,7 @@ object PrintUsage {
   implicit val puw: OFormat[PrintUsage] = Json.format[PrintUsage]
 }
 
-case class DigitalMediaUsageMetadata(webUrl: String, webTitle: String, sectionId: String)
+case class DigitalMediaUsageMetadata(webUrl: String, webTitle: Option[String], sectionId: Option[String])
 object DigitalMediaUsageMetadata {
   implicit val dmumf: OFormat[DigitalMediaUsageMetadata] = Json.format[DigitalMediaUsageMetadata]
 }
