@@ -110,7 +110,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   def addCollection(name: String, parentPath: Seq[String])(implicit ec: ExecutionContext): CollectionsResponse = {
     val collectionsLink = getCollectionsEndpoints.links.find(_.rel == "collections").get.href
 
-    val path = if (parentPath.isEmpty) "" else parentPath.mkString("/", "/", "")
+    val path = if (parentPath.nonEmpty) "/" + parentPath.mkString("/") else ""
     val url = collectionsLink + path
     val result = Await.result(wsClient.url(url).
       withHttpHeaders("X-Gu-Media-Key" -> apiKey).
