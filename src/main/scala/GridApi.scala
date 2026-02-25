@@ -97,8 +97,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   }
 
   def getCollections()(implicit ec: ExecutionContext): Option[CollectionsResponse] = {
-    val links = getCollectionsEndpoints
-    val collectionsLink = links.links.find(_.rel == "collections").get
+    val collectionsLink = getCollectionsEndpoints.links.find(_.rel == "collections").get
 
     val response = Await.result(authedGet(collectionsLink.href), reasonableWait)
     if (response.status == 200) {
@@ -106,6 +105,18 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     } else {
       None
     }
+  }
+
+  def addCollection(name: String, parentPath: Seq[String])(implicit ec: ExecutionContext): CollectionsResponse = {
+    val collectionsLink = getCollectionsEndpoints.links.find(_.rel == "collections").get.href
+
+    val path = if (parentPath.isEmpty) "" else parentPath.mkString("/", "/", "")
+    val url = collectionsLink + path
+    val result = Await.result(wsClient.url(url).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      post(Json.toJson(Map("data" -> name))), reasonableWait)
+
+    Json.parse(result.body).as[CollectionsResponse]
   }
 
   def getUsages(imageId: String): Option[UsagesResponse] = {

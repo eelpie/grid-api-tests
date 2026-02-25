@@ -7,7 +7,7 @@ object CollectionsResponse {
 
 }
 
-case class CollectionNode(basename: String)
+case class CollectionNode(basename: String, fullPath: Seq[String])
 
 object CollectionNode {
   implicit val cnr: Reads[CollectionNode] = Json.reads[CollectionNode]
