@@ -5,8 +5,12 @@ import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Millis, Seconds, Span}
 
 import java.util.UUID
+import scala.concurrent.Await
+import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 
 class UsageRightsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
+
+  private val reasonableWait: FiniteDuration = Duration(5, SECONDS)
 
   private val testImagesSet = getFilesInFolder("usage-rights")
   private val toSet = testImagesSet.head
@@ -36,6 +40,9 @@ class UsageRightsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     inlineUsageRights.publication mustBe Some("Test")
     inlineUsageRights.category mustBe Some("staff-photographer")
     inlineUsageRights.photographer mustBe Some(newPhotographer)
+
+    val metadataUsagesRightsEndpointResponse = Await.result(gridApi.authedGet(reloaded.userMetadata.data.usageRights.uri), reasonableWait)
+    metadataUsagesRightsEndpointResponse.status mustBe 200
   }
 
   it should "show not set" in {
@@ -51,6 +58,9 @@ class UsageRightsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     val reloaded = gridApi.getImage(image.id).get
     val inlineUsageRights = reloaded.userMetadata.data.usageRights.data
     inlineUsageRights mustBe None
+
+    val metadataUsagesRightsEndpointResponse = Await.result(gridApi.authedGet(reloaded.userMetadata.data.usageRights.uri), reasonableWait)
+    metadataUsagesRightsEndpointResponse.status mustBe 404
   }
 
 }
