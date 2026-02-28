@@ -1,28 +1,26 @@
 import com.drew.imaging.ImageMetadataReader
 import com.drew.metadata.exif.{ExifDirectoryBase, ExifIFD0Directory}
 import org.apache.pekko.util.ByteString
-import org.joda.time
-import org.joda.time.DateTime
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.{convertToAnyMustWrapper, not}
 
 import java.io.ByteArrayInputStream
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
+import scala.concurrent.duration.{Duration, SECONDS}
 
 
 class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
   "Crops API" should "crop an image and return crop details" in {
-    val image = uploadImage("IMG_3939.JPG")
+    val image = uploadImage("crops/IMG_0106.HEIC")
     // TODO set credit and description
     val cropRequest = CropRequest(
       source = gridApi.uriFor(image),
-      x = 800,
-      y = 810,
-      width = 3000,
-      height = 2000,
+      x = 10,
+      y = 10,
+      width = 2000,
+      height = 3000,
       // TODO aspect ratio does what?
     )
 
@@ -31,10 +29,10 @@ class CropsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     result.isRight mustBe true
     val crop = result.right.get
     crop.id.nonEmpty mustBe true
-    crop.specification.bounds.x mustBe 800
-    crop.specification.bounds.y mustBe 810
-    crop.specification.bounds.width mustBe 3000
-    crop.specification.bounds.height mustBe 2000
+    crop.specification.bounds.x mustBe 10
+    crop.specification.bounds.y mustBe 10
+    crop.specification.bounds.width mustBe 2000
+    crop.specification.bounds.height mustBe 3000
 
     crop.assets.head.mimeType mustBe "image/jpeg"
   }
