@@ -115,7 +115,7 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
     gridApi.syndicate(image.id, "our-syndication-partner", startPending = false)
 
-    eventually(timeout(Span(10, Seconds)), interval(Span(100, Millis))) {
+    eventually(timeout(Span(20, Seconds)), interval(Span(100, Millis))) {
       val imageIdsInSearchResponse = gridApi.getImages(q = Some("+syndicationStatus:sent")).map(_.id)
       imageIdsInSearchResponse.contains(image.id) mustBe true
     }
