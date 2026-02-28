@@ -32,5 +32,16 @@ class UsageRightsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     }
   }
 
+  it should "show not set" in {
+    val image = uploadImage(unset)
+
+    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+      val reloaded = gridApi.getImage(image.id).get
+      reloaded.usageRights.publication mustBe None
+      reloaded.usageRights.category mustBe None
+      reloaded.usageRights.photographer mustBe None
+    }
+  }
+
 }
 
