@@ -30,6 +30,12 @@ class UsageRightsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       reloaded.usageRights.category mustBe Some("staff-photographer")
       reloaded.usageRights.photographer mustBe Some(newPhotographer)
     }
+
+    val reloaded = gridApi.getImage(image.id).get
+    val inlineUsageRights = reloaded.userMetadata.data.usageRights.data.get
+    inlineUsageRights.publication mustBe Some("Test")
+    inlineUsageRights.category mustBe Some("staff-photographer")
+    inlineUsageRights.photographer mustBe Some(newPhotographer)
   }
 
   it should "show not set" in {
@@ -41,6 +47,10 @@ class UsageRightsTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       reloaded.usageRights.category mustBe None
       reloaded.usageRights.photographer mustBe None
     }
+
+    val reloaded = gridApi.getImage(image.id).get
+    val inlineUsageRights = reloaded.userMetadata.data.usageRights.data
+    inlineUsageRights mustBe None
   }
 
 }

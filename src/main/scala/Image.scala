@@ -23,7 +23,36 @@ object Source {
   implicit val sr: Reads[Source] = Json.reads[Source]
 }
 
-case class Image(id: String, metadata: Metadata, usageRights: UsageRights, fileMetadata: URILink, usages: ImageUsageField, syndicationStatus: String, source: Source, exports: Seq[Crop])
+case class UsageRightsWrapper(uri: String, data: Option[UsageRights])
+
+object UsageRightsWrapper {
+  implicit val urwr: Reads[UsageRightsWrapper] = Json.reads[UsageRightsWrapper]
+}
+
+case class UserMetadata(usageRights: UsageRightsWrapper)
+
+object UserMetadata {
+  implicit val umwr: Reads[UserMetadata] = Json.reads[UserMetadata]
+}
+
+case class UserMetadataWrapper(
+                                uri: String,
+                                data: UserMetadata
+                              )
+
+object UserMetadataWrapper {
+  implicit val umwr: Reads[UserMetadataWrapper] = Json.reads[UserMetadataWrapper]
+}
+
+case class Image(id: String,
+                 metadata: Metadata,
+                 usageRights: UsageRights,
+                 fileMetadata: URILink,
+                 usages: ImageUsageField,
+                 syndicationStatus: String,
+                 source: Source,
+                 exports: Seq[Crop],
+                 userMetadata: UserMetadataWrapper)
 
 object Image {
   implicit val ir: Reads[Image] = Json.reads[Image]
