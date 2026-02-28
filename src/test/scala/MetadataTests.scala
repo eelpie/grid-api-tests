@@ -5,8 +5,12 @@ import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Millis, Seconds, Span}
 
 import java.util.UUID
+import scala.concurrent.Await
+import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 
 class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
+
+  private val reasonableWait: FiniteDuration = Duration(5, SECONDS)
 
   "Metadata extraction" should
     "record file metadata" in {
@@ -32,7 +36,7 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
   }
 
   "Metadata editing" should "allow image metadata to be set" in {
-    val image = uploadImage("poppies.tif")
+    val image = uploadImage("IMG_0128.HEIC")
 
     val newTitle = UUID.randomUUID().toString
     val newDescription = UUID.randomUUID().toString
@@ -48,6 +52,11 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       updatedImage.metadata.title mustBe Some(newTitle)
       updatedImage.metadata.description mustBe Some(newDescription)
     }
+
+    // Check regression; metadata edit on an image with no rights breaks the image's usage rights end point.
+    val reloaded = gridApi.getImage(image.id).get
+    val metadataUsagesRightsEndpointResponse = Await.result(gridApi.authedGet(reloaded.userMetadata.data.usageRights.uri), reasonableWait)
+    metadataUsagesRightsEndpointResponse.status mustBe 404
   }
 
   it should "allow usage rights to be set for an image" in {
