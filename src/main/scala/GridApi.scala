@@ -44,6 +44,15 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     insertIdInto(imageLink.href, image.id)
   }
 
+  def addImageCollection(imageId: String, fullPath: Seq[String]): Unit = {
+    val imageActions = getImageActions(imageId).get
+    val addCollectionAction = imageActions.find(_.name == "add-collection").get
+
+    Await.result(wsClient.url(addCollectionAction.href).
+      withHttpHeaders("X-Gu-Media-Key" -> apiKey).
+      post(Json.toJson(Map("data" -> fullPath))), reasonableWait)
+  }
+
   def getImageLoaderEndpoints: MediaApiResponse = {
     val loaderLink = getServiceEndpoints.links.find(_.rel == "loader").get
     loadServiceIndexPage(loaderLink.href)
@@ -55,9 +64,9 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
   }
 
   def getImageCropEndpoints(imageId: String): MediaApiResponse = {
-    val croppedImageLinks = getImageLinks(imageId).get
-    println(croppedImageLinks)
-    val cropsLink: Link = croppedImageLinks.find(_.rel == "crops").get
+    val imageLinks = getImageLinks(imageId).get
+    println(imageLinks)
+    val cropsLink = imageLinks.find(_.rel == "crops").get
 
     loadServiceIndexPage(cropsLink.href)
   }
@@ -230,6 +239,7 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     if (response.status == 200) {
       Right(Json.parse(response.body).as[Crop])
     } else {
+      println(response.body)
       Left(response.body)
     }
   }
@@ -373,6 +383,20 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
       None
     }
   }
+
+  def getImageActions(imageId: String): Option[Seq[Action]] = {
+    val imageLink = getServiceEndpoints.links.find(_.rel == "image").get.href
+    val url = insertIdInto(imageLink, imageId)
+    val eventualResponse = authedGet(url)
+    val response = Await.result(eventualResponse, reasonableWait)
+    if (response.status == 200) {
+      val data = Json.parse(response.body) \ "actions"
+      Some(data.as[Seq[Action]])
+    } else {
+      None
+    }
+  }
+
 
   def getImages(q: Option[String]): Seq[Image] = {
     val searchLink = getServiceEndpoints.links.find(_.rel == "search").get.href

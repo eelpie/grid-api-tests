@@ -35,6 +35,21 @@ object UserMetadata {
   implicit val umwr: Reads[UserMetadata] = Json.reads[UserMetadata]
 }
 
+case class ImageCollection(path: Seq[String])
+
+object ImageCollection {
+  implicit val imcr: Reads[ImageCollection] = Json.reads[ImageCollection]
+}
+
+case class CollectionsWrapper(
+                               uri: String,
+                               data: ImageCollection
+                             )
+
+object CollectionsWrapper {
+  implicit val umwr: Reads[CollectionsWrapper] = Json.reads[CollectionsWrapper]
+}
+
 case class UserMetadataWrapper(
                                 uri: String,
                                 data: UserMetadata
@@ -52,7 +67,9 @@ case class Image(id: String,
                  syndicationStatus: String,
                  source: Source,
                  exports: Seq[Crop],
-                 userMetadata: UserMetadataWrapper)
+                 userMetadata: UserMetadataWrapper,
+                 collections: Seq[CollectionsWrapper],
+                )
 
 object Image {
   implicit val ir: Reads[Image] = Json.reads[Image]
