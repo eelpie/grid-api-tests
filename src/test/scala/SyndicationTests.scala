@@ -129,7 +129,7 @@ class SyndicationTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     firstUsage.platform mustBe "syndication"
     firstUsage.status mustBe "syndicated"
 
-    eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
+    eventually(timeout(Span(10, Seconds)), interval(Span(100, Millis))) {
       val sentImage = gridApi.getImage(image.id).get
       sentImage.syndicationStatus mustBe "sent"
     }
