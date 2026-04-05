@@ -41,6 +41,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     val maybeAddedPrintUsage = usages.find(usage => usage.platform == "print" && usage.dateAdded == dateAdded && usage.status == "published")
     maybeAddedPrintUsage.nonEmpty mustBe true
     val printUsageId = maybeAddedPrintUsage.get.id
+    printUsageId.startsWith("print/") mustBe true
 
     // Read back the usage from it's advertised uri.
     val maybeImage = gridApi.getImage(image.id)
@@ -76,6 +77,7 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
     addedDigitalUsage.get.digitalUsageMetadata.map(_.webUrl) mustBe Some(webUrl)
     val digitalUsageId = addedDigitalUsage.get.id
+    digitalUsageId.startsWith("digital/") mustBe true
 
     // Read back the usage from it's advertised uri.
     val maybeImage = gridApi.getImage(image.id)
