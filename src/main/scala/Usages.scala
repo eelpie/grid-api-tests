@@ -66,7 +66,7 @@ object Usage {
   import JodaReads._
   implicit val ur: Reads[Usage] = Json.reads[Usage]
 }
-case class UsageResponseItem(data: Usage)
+case class UsageResponseItem(data: Usage, uri: String)
 object UsageResponseItem {
   implicit val mr: Reads[UsageResponseItem] = Json.reads[UsageResponseItem]
 }

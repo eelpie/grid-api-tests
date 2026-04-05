@@ -6,6 +6,8 @@ import org.scalatest.matchers.must.Matchers.convertToAnyMustWrapper
 import org.scalatest.time.{Millis, Seconds, Span}
 
 import java.util.UUID
+import scala.concurrent.Await
+import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS}
 
 
 class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
@@ -17,6 +19,8 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
   private val forSyndication = grouped(1)
   private val forDelete = grouped(2)
   private val forDigital = grouped(3)
+
+  private val reasonableWait: FiniteDuration = Duration(20, SECONDS)
 
   "Usages API" should "allow print usages to be added to an image" in {
     val image = uploadImage(forPrint.head)
@@ -32,8 +36,20 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       val usages = gridApi.getImage(image.id).get.usages
       usages.data.nonEmpty mustBe true
     }
+
     val usages = gridApi.getUsages(image.id).get.data.map(_.data)
-    usages.exists(usage => usage.platform == "print" && usage.dateAdded == dateAdded && usage.status == "published") mustBe true
+    val maybeAddedPrintUsage = usages.find(usage => usage.platform == "print" && usage.dateAdded == dateAdded && usage.status == "published")
+    maybeAddedPrintUsage.nonEmpty mustBe true
+    val printUsageId = maybeAddedPrintUsage.get.id
+
+    // Read back the usage from it's advertised uri.
+    val maybeImage = gridApi.getImage(image.id)
+    val data = maybeImage.get.usages.data
+    val usageItem: UsageResponseItem = data.find(_.data.id == printUsageId).get
+    val uri = usageItem.uri
+
+    val usageUriResponse = Await.result(gridApi.authedGet(uri), reasonableWait)
+    usageUriResponse.status mustBe 200
   }
 
   it should "allow digital media usages to be added to an image" in {
@@ -55,8 +71,20 @@ class UsageTests extends AnyFlatSpec with GridUnderTest with Fixtures {
       usages.data.nonEmpty mustBe true
     }
     val usages = gridApi.getUsages(image.id).get.data.map(_.data)
-    usages.exists(usage => usage.platform == "digital" && usage.dateAdded == dateAdded && usage.status == "published") mustBe true
-    usages.head.digitalUsageMetadata.map(_.webUrl) mustBe Some(webUrl)
+    val addedDigitalUsage = usages.find(usage => usage.platform == "digital" && usage.dateAdded == dateAdded && usage.status == "published")
+    addedDigitalUsage.nonEmpty mustBe true
+
+    addedDigitalUsage.get.digitalUsageMetadata.map(_.webUrl) mustBe Some(webUrl)
+    val digitalUsageId = addedDigitalUsage.get.id
+
+    // Read back the usage from it's advertised uri.
+    val maybeImage = gridApi.getImage(image.id)
+    val data = maybeImage.get.usages.data
+    val usageItem: UsageResponseItem = data.find(_.data.id == digitalUsageId).get
+    val uri = usageItem.uri
+
+    val usageUriResponse = Await.result(gridApi.authedGet(uri), reasonableWait)
+    usageUriResponse.status mustBe 200
   }
 
   it should "allow syndication usages to be added to an image" in {
