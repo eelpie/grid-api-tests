@@ -105,6 +105,22 @@ class GridApi(mediaApiUrl: String, apiKey: String) extends DefaultBodyWritables 
     }
   }
 
+  def getMetadata(imageId: String): Either[Unit, MetadataResponse] = {
+    val imageLinks = getImageLinks(imageId).get
+    val editLink = imageLinks.find(_.rel == "edits").get
+
+    val url = insertIdInto(editLink.href, imageId)
+
+    val eventualResponse = authedGet(url)
+    val response = Await.result(eventualResponse, reasonableWait)
+    if (response.status == 200) {
+      println(response.body)
+      Right((Json.parse(response.body) \ "data").as[MetadataResponse])
+    } else {
+      Left()
+    }
+  }
+
   def getCollections()(implicit ec: ExecutionContext): Option[CollectionsResponse] = {
     val collectionsLink = getCollectionsEndpoints.links.find(_.rel == "collections").get
 

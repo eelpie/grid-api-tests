@@ -23,6 +23,16 @@ object Source {
   implicit val sr: Reads[Source] = Json.reads[Source]
 }
 
+case class MetadataResponse(metadata: MetadataWrapper, lastModified: String)
+object MetadataResponse {
+  implicit val mdr: Reads[MetadataResponse] = Json.reads[MetadataResponse]
+}
+
+case class MetadataWrapper(data: Metadata)
+object MetadataWrapper {
+  implicit val mdw: Reads[MetadataWrapper] = Json.reads[MetadataWrapper]
+}
+
 case class UsageRightsWrapper(uri: String, data: Option[UsageRights])
 
 object UsageRightsWrapper {

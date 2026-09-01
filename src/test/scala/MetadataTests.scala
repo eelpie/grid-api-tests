@@ -35,7 +35,7 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
     maybeImage.flatMap(_.metadata.credit) mustBe Some("IPTC")
   }
 
-  "Metadata editing" should "allow image metadata to be set" in {
+  "Metadata editing" should "allow image metadata to be edited" in {
     val image = uploadImage("IMG_0128.HEIC")
 
     val newTitle = UUID.randomUUID().toString
@@ -47,6 +47,12 @@ class MetadataTests extends AnyFlatSpec with GridUnderTest with Fixtures {
 
     gridApi.setMetadata(image.id, updatedMetadata)
 
+    // The change should be persisted and reflected immediately on the image metadata end point
+    val metadataResponse = gridApi.getMetadata(image.id).right.get
+    metadataResponse.metadata.data.title mustBe Some(newTitle)
+    metadataResponse.metadata.data.description mustBe Some(newDescription)
+
+    // And eventually propagate to the image responses
     eventually(timeout(Span(5, Seconds)), interval(Span(100, Millis))) {
       val updatedImage = gridApi.getImage(image.id).get
       updatedImage.metadata.title mustBe Some(newTitle)
